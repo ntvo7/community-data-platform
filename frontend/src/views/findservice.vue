@@ -84,78 +84,75 @@
 </template>
 
 <script>
-import { getServices, searchServices } from '../api/api'
-import { useToast } from 'vue-toastification'
-
-//Notifications
-const toast = useToast()
+import { ref } from 'vue';
+import { getServices, searchServices } from '../api/api';
+import { useToast } from 'vue-toastification';
 
 export default {
-  data() {
-    return {
-      //variable to hold the services for the organization
-      services: null,
-      // Parameters for search to occur
-      searchBy: null,
-      name: null,
-      description: null,
-      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
-      hoverId: null,
-    }
-  },
-  mounted() {
-    // when component is mounted, load the data
-    this.loadData();
-  },
-  methods: {
-    // method called when component is mounted
-    async loadData() {
-      // Resets all the variables
-      this.searchBy = ''
-      this.name = ''
-      this.description = ''
+  setup() {
+    const toast = useToast();
 
-      // get list of services
+    const services = ref(null);
+    const searchBy = ref(null);
+    const name = ref(null);
+    const description = ref(null);
+    const hoverId = ref(null);
+
+    const loadData = async () => {
+      searchBy.value = '';
+      name.value = '';
+      description.value = '';
+
       try {
         const response = await getServices();
-        this.services = response;
+        services.value = response;
       } catch (error) {
-        toast.error(error)
+        toast.error('Error loading services:', error);
       }
-    },
+    };
 
-    // method called when user searches for a service
-    async handleSubmitForm() {
-      // if user searches by service name
-      if (this.searchBy === 'Service Name') {
-        if (this.name) {
+    const handleSubmitForm = async () => {
+      if (searchBy.value === 'Service Name') {
+        if (name.value) {
           try {
             const query = {
               searchBy: 'name',
-              name: this.name
-            }
-            const response = await searchServices(query)
-            this.services = response;
+              name: name.value
+            };
+            const response = await searchServices(query);
+            services.value = response;
           } catch (error) {
-            toast.error(error)
+            toast.error('Error searching services:', error);
           }
         }
-        // if user searches by service description
-      } else if (this.searchBy === 'Service Description') {
-        if (this.description) {
+      } else if (searchBy.value === 'Service Description') {
+        if (description.value) {
           try {
             const query = {
               searchBy: 'description',
-              description: this.description
-            }
-            const response = await searchServices(query)
-            this.services = response;
+              description: description.value
+            };
+            const response = await searchServices(query);
+            services.value = response;
           } catch (error) {
-            toast.error('Error searching services:', error)
+            toast.error('Error searching services:', error);
           }
         }
       }
-    },
+    };
+
+    return {
+      services,
+      searchBy,
+      name,
+      description,
+      hoverId,
+      loadData,
+      handleSubmitForm
+    };
   },
-}
+  mounted() {
+    this.loadData();
+  }
+};
 </script>

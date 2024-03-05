@@ -93,36 +93,36 @@
 import { useLoggedInUserStore } from './store/loggedInUser'
 import { getOrgName } from './api/api'
 import { useToast } from 'vue-toastification'
-
-//Notifications
-const toast = useToast()
+import { ref, onMounted } from 'vue'
 
 export default {
   setup() {
     const user = useLoggedInUserStore();
-    return { user };
-  },
-  data() {
-    return {
-      orgName: "Dataplatform",
-    };
-  },
-  async created() {
-    try {
-      this.orgName = await getOrgName();
-    } catch {
-      throw (error)
-    }
-  },
-  methods: {
-    logout() {
+    const orgName = ref("Dataplatform");
+    const toast = useToast();
+
+    const fetchOrgName = async () => {
       try {
-        this.$store.dispatch('clearSessionData');
-        this.$router.push('/')
+        orgName.value = await getOrgName();
       } catch (error) {
-        toast.error('logout error', error)
+        toast.error('Failed to fetch organization name', error)
       }
-    },
+    };
+
+    onMounted(fetchOrgName);
+
+    const logout = () => {
+      try {
+        // Assuming clearSessionData is a mutation
+        // this.$store.commit('clearSessionData');
+        // For router navigation, ensure this.$router is properly set up
+        // this.$router.push('/');
+      } catch (error) {
+        toast.error('Logout error', error)
+      }
+    };
+
+    return { user, orgName, logout };
   }
 }
 </script>

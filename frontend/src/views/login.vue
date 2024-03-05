@@ -32,21 +32,22 @@
 </template>
 
 <script>
-  import { useLoggedInUserStore } from "../store/loggedInUser";
+import { useLoggedInUserStore } from "../store/loggedInUser";
+import { ref } from 'vue';
 
-  export default {
-    data() {
-      return {
-        username: "",
-        password: "",
-      }
-    },
-    setup() {
-      const store = useLoggedInUserStore();
-      return {
-        store
-      }
-    }
+export default {
+  setup() {
+    const username = ref('');
+    const password = ref('');
+    const store = useLoggedInUserStore();
+
+    return {
+      username,
+      password,
+      store
+    };
   }
+}
 </script>
+
 

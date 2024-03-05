@@ -155,97 +155,78 @@
 </template>
 
 <script>
-// import vuelidate validations
-import useVuelidate from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
-import { getServices, createEvent } from '../api/api'
-import { useToast } from 'vue-toastification'
-
-//Notifications
-const toast = useToast()
+import { ref, onMounted } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import { getServices, createEvent } from '../api/api';
+import { useToast } from 'vue-toastification';
 
 export default {
-  data() {
-    return {
-      // event variable to hold new event information
-      event: {
-        name: null,
-        description: null,
-        date: null,
-        services: [],
-        address: {
-          line1: null,
-          line2: null,
-          city: null,
-          county: null,
-          zip: null
-        },
-        attendees: [],
-      },
-      //variable to assign service IDs to event (user clicks checkboxes to add services to event)
-      activeServices: [],
-      // variable that determines which services in the List of Services checkboxes have expanded details
-      openDescriptions: [],
-    }
-  },
   setup() {
-    // Register Vuelidate
     const v$ = useVuelidate();
-    return { v$ };
-  },
-  validations() {
-    // validations
-    const validDate = (value) => {
-      const date = new Date(value)
-      return !isNaN(date)
-    }
+    const toast = useToast();
 
-    // prevents form submission if new event has a date before the current date
-    const notBeforeToday = (value) => {
-      const today = new Date()
-      return value >= today.toISOString().split('T')[0]
-    }
+    const event = ref({
+      name: null,
+      description: null,
+      date: null,
+      services: [],
+      address: {
+        line1: null,
+        line2: null,
+        city: null,
+        county: null,
+        zip: null
+      },
+      attendees: []
+    });
+    const activeServices = ref([]);
+    const openDescriptions = ref([]);
 
-    return {
+    const validations = {
       event: {
         name: { required },
         date: {
           required,
-          validDate,
-          notBeforeToday
-        },
+          validDate: (value) => !isNaN(new Date(value)),
+          notBeforeToday: (value) => {
+            const today = new Date();
+            return value >= today.toISOString().split('T')[0];
+          }
+        }
       }
-    }
-  },
-  async mounted() {
-    // when component is mounted, data is loaded
-    try {
-        const response = await getServices();
-        this.activeServices = response.filter(item => item.status === "Active")
-      } catch (error) {
-        toast.error(error)
-      }
-  },
-  methods: {
-    // method called when user tries to create new event
-    async handleSubmitForm() {
-      // Trigger validation
-      this.v$.$validate();
+    };
 
-      if (this.v$.$error) {
-        toast.error('Please fix input field errors')
-        // Form is invalid, do not proceed
+    const loadData = async () => {
+      try {
+        const response = await getServices();
+        activeServices.value = response.filter(item => item.status === "Active");
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    const handleSubmitForm = async () => {
+      v$.value.$validate();
+
+      if (v$.value.$error) {
+        toast.error('Please fix input field errors');
         return;
       }
 
       try {
-        const response = await createEvent(this.event);
-        this.$router.push('/findevents')
-        toast.success(response)
+        const response = await createEvent(event.value);
+        toast.success(response);
+        this.$router.push('/findevents');
       } catch (error) {
-        toast.error('error creating new event:', error)
+        toast.error('Error creating new event:', error);
       }
-    },
-  },
-}
+    };
+
+    onMounted(loadData);
+
+    return { v$, event, activeServices, openDescriptions, validations, handleSubmitForm };
+  }
+};
 </script>
+
