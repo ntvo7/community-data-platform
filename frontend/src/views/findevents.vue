@@ -84,85 +84,85 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import { getEvents, searchEvents } from '../api/api';
-import { useToast } from 'vue-toastification';
+import { getClients, searchClients } from '../api/api'
+import { useToast } from 'vue-toastification'
+
+
+//Notifications
+const toast = useToast()
+
 
 export default {
-  setup() {
-    const toast = useToast();
+  data() {
+    return {
+      //variable to store all clients and their information for the organization
+      clients: null,
+      // Parameters for search to occur
+      searchBy: '',
+      firstName: '',
+      lastName: '',
+      phoneNumber: '',
+      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
+      hoverId: null,
+    }
+  },
+  mounted() {
+    // when component is mounted, load the data -
+    this.loadData()
+  },
+  methods: {
+    // method called when component is mounted
+    async loadData() {
+      // Resets all the variables
+      this.searchBy = ''
+      this.firstName = ''
+      this.lastName = ''
+      this.phoneNumber = ''
 
-    const events = ref(null);
-    const searchBy = ref(null);
-    const name = ref(null);
-    const eventDate = ref(null);
-    const hoverId = ref(null);
 
-    const loadData = async () => {
-      searchBy.value = null;
-      name.value = null;
-      eventDate.value = null;
-
+      // get list of clients
       try {
-        const response = await getEvents();
-        events.value = response;
+        const response = await getClients();
+        this.clients = response;
       } catch (error) {
-        toast.error('Error loading events:', error);
+        toast.error(error)
       }
-    };
-
-    const handleSubmitForm = async () => {
-      if (searchBy.value === 'Event Name') {
-        if (name.value) {
+    },
+    // method called when user searches for clients
+    async handleSubmitForm() {
+      // if user searched by client name
+      if (this.searchBy === 'Client Name') {
+        if (this.firstName || this.lastName) {
           try {
             const query = {
               searchBy: 'name',
-              name: name.value
-            };
-            const response = await searchEvents(query);
-            events.value = response;
+              firstName: this.firstName,
+              lastName: this.lastName,
+            }
+            const response = await searchClients(query)
+            this.clients = response;
           } catch (error) {
-            toast.error('Error searching events:', error);
+            toast.error(error)
           }
         }
-      } else if (searchBy.value === 'Event Date') {
-        if (eventDate.value) {
+        // if user searches by client phone number
+      } else if (this.searchBy === 'Client Number') {
+        if (this.phoneNumber) {
           try {
             const query = {
-              searchBy: 'date',
-              eventDate: new Date(eventDate.value).toISOString().substring(0, 10)
-            };
-            const response = await searchEvents(query);
-            events.value = response;
+              searchBy: 'number',
+              phoneNumber: this.phoneNumber
+            }
+            const response = await searchClients(query)
+            this.clients = response;
           } catch (error) {
-            toast.error('Error searching events:', error);
+            toast.error(error)
           }
         }
       }
-    };
-
-    const formatDate = (date) => {
-      const isoDate = new Date(date);
-      const year = isoDate.getUTCFullYear();
-      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(isoDate.getUTCDate()).padStart(2, '0');
-      return `${month}/${day}/${year}`;
-    };
-
-    return {
-      events,
-      searchBy,
-      name,
-      eventDate,
-      hoverId,
-      loadData,
-      handleSubmitForm,
-      formatDate
-    };
+    },
   },
-  mounted() {
-    this.loadData();
-  }
-};
+}
 </script>
+
 

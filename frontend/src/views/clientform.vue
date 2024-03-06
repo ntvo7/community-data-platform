@@ -176,39 +176,48 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators';
-import { createClient } from '../api/api';
-import { useToast } from 'vue-toastification';
+//import functionalities for validation
+import useVuelidate from '@vuelidate/core'
+import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators'
+import { createClient } from '../api/api'
+import { useToast } from 'vue-toastification'
+
+
+//Notifications
+const toast = useToast()
+
 
 export default {
+  data() {
+    return {
+      //client variable to hold new client information
+      client: {
+        firstName: null,
+        middleName: null,
+        lastName: null,
+        email: null,
+        phoneNumber: {
+          primary: null,
+          alternate: null
+        },
+        address: {
+          line1: null,
+          line2: null,
+          city: null,
+          county: null,
+          zip: null
+        },
+      }
+    }
+  },
   setup() {
     // Register Vuelidate
     const v$ = useVuelidate();
-    const toast = useToast();
-
-    // Reactive variable to hold new client information
-    const client = ref({
-      firstName: null,
-      middleName: null,
-      lastName: null,
-      email: null,
-      phoneNumber: {
-        primary: null,
-        alternate: null
-      },
-      address: {
-        line1: null,
-        line2: null,
-        city: null,
-        county: null,
-        zip: null
-      },
-    });
-
-    // Validation rules for client
-    const validations = {
+    return { v$ };
+  },
+  validations() {
+    // validations for client
+    return {
       client: {
         firstName: { required },
         lastName: { required },
@@ -226,33 +235,32 @@ export default {
         },
       },
     };
-
-    // Method called when user submits the form
-    const submitForm = async () => {
+  },
+  methods: {
+    // method called when user submits the form
+    async submitForm() {
       // Trigger validation
-      v$.$validate();
+      this.v$.$validate();
 
-      if (v$.$error) {
+
+      if (this.v$.$error) {
         // Form is invalid, do not proceed
         return;
       }
 
-      try {
-        const response = await createClient(client.value);
-        toast.success(response);
-        // Redirect to the findclient page after successful submission
-        // This assumes you have set up Vue Router properly
-        // Adjust the route according to your setup
-        this.$router.push('/findclient');
-      } catch (error) {
-        toast.error(error);
-      }
-    };
 
-    return { v$, client, submitForm, validations };
-  },
-};
+      try {
+        const response = await createClient(this.client);
+        this.$router.push('/findclient')
+        toast.success(response)
+      } catch (error) {
+        toast.error(error)
+      }
+    },
+  }
+}
 </script>
+
 
 
 

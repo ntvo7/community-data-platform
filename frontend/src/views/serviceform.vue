@@ -77,51 +77,63 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
-import { createService } from '../api/api';
-import { useToast } from 'vue-toastification';
+// import vuelidate validations
+import useVuelidate from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { createService } from '../api/api'
+import { useToast } from 'vue-toastification'
+
+
+//Notifications
+const toast = useToast()
+
 
 export default {
-  setup() {
-    const v$ = useVuelidate();
-    const toast = useToast();
+    data() {
+        return {
+            //variable to hold new service information
+            service: {
+                name: null,
+                description: null,
+                status: "Active",
+            },
+        }
+    },
+    setup() {
+        // Register Vuelidate
+        const v$ = useVuelidate();
+        return { v$ };
+    },
+    validations() {
+        // validations for service
+        return {
+            service: {
+                name: { required },
+            }
+        }
+    },
+    methods: {
+        // method called when user attempts to create new service
+        async handleSubmitForm() {
+            // Trigger validation
+            this.v$.$validate();
 
-    const service = ref({
-      name: null,
-      description: null,
-      status: "Active",
-    });
 
-    const handleSubmitForm = async () => {
-      v$.value.$validate();
+            if (this.v$.$error) {
+                // Form is invalid, do not proceed
+                return;
+            }
 
-      if (v$.value.$error) {
-        return;
-      }
 
-      try {
-        const response = await createService(service.value);
-        toast.success(response);
-        this.$router.push('/findservice');
-      } catch (error) {
-        toast.error('Error creating new service:', error);
-      }
-    };
-
-    const validations = () => ({
-      service: {
-        name: { required },
-      }
-    });
-
-    return {
-      v$,
-      service,
-      handleSubmitForm,
-      validations
-    };
-  }
+            try {
+                const response = await createService(this.service);
+                toast.success(response)
+                this.$router.push('/findservice')
+            } catch (error) {
+                toast.error('Error creating new service:', error)
+            }
+        },
+    }
 }
 </script>
+
