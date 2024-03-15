@@ -24,9 +24,12 @@
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 v-model="event.name" />
             </label>
-            <!-- Validation error messages -->
-            <span v-if="v$.event.name.$error" class="text-red-500">
+            <!-- Validation error messages -->      <!-- go back -->
+            <!-- <span v-if="v$.event.name.$error" class="text-red-500">
               Event Name is required
+            </span> -->
+            <span v-if="errors.name" class="text-red-500">
+              {{ errors.name }}
             </span>
           </div>
 
@@ -39,8 +42,8 @@
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 v-model="event.date" type="date" />
             </label>
-            <!-- Validation error messages -->
-            <span v-if="v$.event.date.$error" class="text-red-500">
+            <!-- Validation error messages -->            <!-- go back -->
+            <!-- <span v-if="v$.event.date.$error" class="text-red-500">
               <span v-if="v$.event.date.required.$invalid">
                 Event Date is required
               </span>
@@ -51,6 +54,9 @@
                 v-else-if="!v$.event.date.required.$invalid && !v$.event.date.validDate.$invalid && v$.event.date.notBeforeToday.$invalid">
                 New Event Date cannot be in the past.
               </span>
+            </span> -->
+            <span v-if="errors.date" class="text-red-500">
+              {{ errors.date }}
             </span>
           </div>
 
@@ -62,7 +68,7 @@
               <span class="text-gray-700">Description</span>
               <textarea
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                rows="2"></textarea>
+                rows="2" v-model="event.description"></textarea> <!-- go back -->
             </label>
           </div>
         </div>
@@ -154,7 +160,7 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -254,6 +260,82 @@ export default {
     },
   },
 }
+</script> -->
+
+<script>
+import { ref } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { getServices, createEvent } from '../api/api'
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router';
+
+
+export default {
+  setup() {
+    const event = ref({
+      name: '',
+      description: '',
+      date: '',
+      services: [],
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        zip: ''
+      },
+      attendees: []
+    })
+    const activeServices = ref([])
+    const errors = ref({})
+    const toast = useToast()
+    const router = useRouter()
+
+
+    const v$ = useVuelidate()
+
+    const handleSubmitForm = async () => {
+      // v$.$validate()
+
+      // if (v$.$error) {
+      //   errors.value = v$.$errors
+      //   toast.error('Please fix input field errors')
+      //   return
+      // }
+
+      try {
+        const response = await createEvent(event.value)
+        // Assuming there's a router instance available
+        // this.$router.push('/findevents')
+        router.push({ name: 'findevents' });
+        toast.success(response)
+      } catch (error) {
+        toast.error('Error creating new event:', error)
+      }
+    }
+
+    const fetchServices = async () => {
+      try {
+        const response = await getServices()
+        activeServices.value = response.filter(item => item.status === "Active")
+      } catch (error) {
+        toast.error(error)
+      }
+    }
+
+    fetchServices()
+
+    return {
+      event,
+      activeServices,
+      errors,
+      handleSubmitForm
+    }
+  }
+}
 </script>
+
+
 
 

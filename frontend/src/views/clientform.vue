@@ -175,17 +175,15 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 //import functionalities for validation
 import useVuelidate from '@vuelidate/core'
 import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators'
 import { createClient } from '../api/api'
 import { useToast } from 'vue-toastification'
 
-
 //Notifications
 const toast = useToast()
-
 
 export default {
   data() {
@@ -241,14 +239,10 @@ export default {
     async submitForm() {
       // Trigger validation
       this.v$.$validate();
-
-
       if (this.v$.$error) {
         // Form is invalid, do not proceed
         return;
       }
-
-
       try {
         const response = await createClient(this.client);
         this.$router.push('/findclient')
@@ -259,8 +253,83 @@ export default {
     },
   }
 }
-</script>
+</script> -->
 
+<script>
+import { ref } from 'vue';
+import { useVuelidate } from '@vuelidate/core';
+import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators';
+import { createClient } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
+
+export default {
+  setup() {
+    const client = ref({
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: {
+        primary: '',
+        alternate: ''
+      },
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        zip: ''
+      },
+    });
+
+    const toast = useToast();
+    const router = useRouter();
+
+    const rules = {
+      client: {
+        firstName: { required },
+        lastName: { required },
+        email: { required, email },
+        phoneNumber: {
+          primary: { required, numeric, minLength: minLength(10), maxLength: maxLength(10) },
+          alternate: { numeric, minLength: minLength(10), maxLength: maxLength(10) }
+        },
+        address: {
+          line1: { required },
+          city: { required },
+          zip: { required, numeric, minLength: minLength(5), maxLength: maxLength(5) }
+        }
+      }
+    };
+    const v$ = useVuelidate(rules, client);
+
+    const submitForm = async () => {
+      // v$.$validate();
+
+      // if (v$.$error) {
+      //   return;
+      // }
+
+      try {
+        const response = await createClient(client.value);
+        toast.success('Client created successfully!');
+        //router.push('/findclient');
+        router.push({ name: 'findclient' });
+        //toast.success(response.message);
+      } catch (error) {
+        toast.error(error.message || 'An error occurred');
+      }
+    };
+
+    return {
+      client,
+      v$,
+      submitForm,
+    };
+  }
+};
+</script>
 
 
 

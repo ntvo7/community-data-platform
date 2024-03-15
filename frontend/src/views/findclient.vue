@@ -95,7 +95,7 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 import { getClients, searchClients } from '../api/api'
 import { useToast } from 'vue-toastification'
 
@@ -175,4 +175,80 @@ export default {
     },
   },
 }
+</script> -->
+
+<script>
+import { ref, onMounted } from 'vue';
+import { getClients, searchClients } from '../api/api';
+import { useToast } from 'vue-toastification';
+
+export default {
+  setup() {
+    const clients = ref(null);
+    const searchBy = ref('');
+    const firstName = ref('');
+    const lastName = ref('');
+    const phoneNumber = ref('');
+    const hoverId = ref(null);
+
+    const toast = useToast();
+
+    const loadData = async () => {
+      searchBy.value = '';
+      firstName.value = '';
+      lastName.value = '';
+      phoneNumber.value = '';
+
+      try {
+        const response = await getClients();
+        clients.value = response;
+      } catch (error) {
+        toast.error(error);
+      }
+    };
+
+    const handleSubmitForm = async () => {
+      if (searchBy.value === 'Client Name') {
+        if (firstName.value || lastName.value) {
+          try {
+            const query = {
+              searchBy: 'name',
+              firstName: firstName.value,
+              lastName: lastName.value,
+            };
+            const response = await searchClients(query);
+            clients.value = response;
+          } catch (error) {
+            toast.error(error);
+          }
+        }
+      } else if (searchBy.value === 'Client Number') {
+        if (phoneNumber.value) {
+          try {
+            const query = {
+              searchBy: 'number',
+              phoneNumber: phoneNumber.value,
+            };
+            const response = await searchClients(query);
+            clients.value = response;
+          } catch (error) {
+            toast.error(error);
+          }
+        }
+      }
+    };
+
+    onMounted(loadData);
+
+    return {
+      clients,
+      searchBy,
+      firstName,
+      lastName,
+      phoneNumber,
+      hoverId,
+      handleSubmitForm,
+    };
+  },
+};
 </script>

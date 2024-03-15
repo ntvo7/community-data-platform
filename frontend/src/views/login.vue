@@ -4,14 +4,16 @@
     <!--Header-->
     <h1 class="font-bold text-4xl text-red-700 tracking-widest text-center mt-10">Welcome</h1>
       <!--Form-->
-      <form @submit.prevent="store.login(username, password)" novalidate="true">
+      <!--form @submit.prevent="store.login(username, password)" novalidate="true"-->
+      <form @submit.prevent="login">
         <div class="flex justify-center mt-10">
           <label>
             <span class="text-gray-700">Username</span>
             <span style="color: #ff0000">*</span>
             <input type="text"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              placeholder v-model="username" />
+              placeholder 
+              v-model="username" />
           </label>
         </div>
         <div class="flex justify-center mt-10">
@@ -20,7 +22,8 @@
             <span style="color: #ff0000">*</span>
             <input type="password"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              placeholder v-model="password" />
+              placeholder 
+              v-model="password" />
           </label>
         </div>
         <!--Login button-->
@@ -32,6 +35,29 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+import { useLoggedInUserStore } from "../store/loggedInUser";
+
+export default {
+  setup() {
+    const username = ref('');
+    const password = ref('');
+    const store = useLoggedInUserStore();
+
+    const login = () => {
+      store.login(username.value, password.value);
+    };
+
+    return {
+      username,
+      password,
+      login
+    }
+  }
+}
+</script>
+
+<!-- <script>
   import { useLoggedInUserStore } from "../store/loggedInUser";
 
 
@@ -49,6 +75,4 @@
       }
     }
   }
-</script>
-
-
+</script> -->

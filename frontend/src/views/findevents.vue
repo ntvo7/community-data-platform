@@ -83,7 +83,7 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 import { getClients, searchClients } from '../api/api'
 import { useToast } from 'vue-toastification'
 
@@ -163,6 +163,77 @@ export default {
     },
   },
 }
+</script> -->
+
+<script>
+import { ref } from 'vue'
+import { getClients, searchClients } from '../api/api'
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
+
+export default {
+  setup() {
+    const searchBy = ref('Event Name')
+    const searchInput = ref('')
+    const events = ref([])
+    const hoverId = ref(null)
+    const toast = useToast()
+    const router = useRouter()
+
+
+    const handleSubmitForm = async () => {
+      if (searchInput.value) {
+        try {
+          let response = []
+          if (searchBy.value === 'Event Name') {
+            response = await searchClients({ searchBy: 'name', name: searchInput.value })
+          } else if (searchBy.value === 'Event Date') {
+            response = await searchClients({ searchBy: 'date', date: searchInput.value })
+          }
+          events.value = response
+        } catch (error) {
+          toast.error(error)
+        }
+      }
+    }
+
+    const clearSearch = () => {
+      searchInput.value = ''
+      loadData()
+    }
+
+    const viewEventDetails = (eventId) => {
+      // Assuming there's a router instance available
+      router.push({ name: 'eventdetails', params: { id: eventId } })
+      console.log('View event details for event ID:', eventId)
+    }
+
+    const loadData = async () => {
+      try {
+        const response = await getClients()
+        events.value = response
+      } catch (error) {
+        toast.error(error)
+      }
+    }
+
+    const formatDate = (dateString) => {
+      // Format date as needed
+      return dateString
+    }
+
+    loadData()
+
+    return {
+      searchBy,
+      searchInput,
+      events,
+      hoverId,
+      handleSubmitForm,
+      clearSearch,
+      viewEventDetails,
+      formatDate
+    }
+  }
+}
 </script>
-
-

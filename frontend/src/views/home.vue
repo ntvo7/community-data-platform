@@ -124,7 +124,7 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 import AttendanceChart from '../components/barChart.vue'
 import ZipChart from '../components/donutZipChart.vue'
 import { getAttendance, getClientsByZipCode } from '../api/api'
@@ -228,6 +228,127 @@ export default {
       const day = String(isoDate.getUTCDate()).padStart(2, '0');
       return `${month}/${day}/${year}`;
     },
+  }
+}
+</script> -->
+
+<script>
+import { ref, onMounted } from 'vue'
+import AttendanceChart from '../components/barChart.vue'
+import ZipChart from '../components/donutZipChart.vue'
+import { getAttendance, getClientsByZipCode } from '../api/api'
+
+export default {
+  components: {
+    AttendanceChart,
+    ZipChart,
+  },
+  setup() {
+    const recentEvents = ref([])
+    const zips = ref([])
+    const labels = ref([])
+    const chartData = ref([])
+    const zipLabels = ref([])
+    const zipChartData = ref([])
+    const loading = ref(false)
+    const error = ref(null)
+    const zipLoading = ref(false)
+    const zipError = ref(null)
+
+    const formatDate = (date) => {
+      const isoDate = new Date(date);
+      const year = isoDate.getUTCFullYear();
+      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(isoDate.getUTCDate()).padStart(2, '0');
+      return `${month}/${day}/${year}`;
+    }
+
+    const getAttendanceData = async () => {
+      try {
+        error.value = null
+        loading.value = true
+       
+        const attendance = await getAttendance();
+        recentEvents.value = attendance;
+        labels.value = attendance.map(
+          (item) => `${item.name} (${formatDate(item.date)})`
+        )
+        chartData.value = attendance.map((item) => item.attendees.length)
+      } catch (err) {
+        if (err.response) {
+          // client received an error response (5xx, 4xx)
+          error.value = {
+            title: 'Server Response',
+            message: err.message
+          }
+        } else if (err.request) {
+          // client never received a response, or request never left
+          error.value = {
+            title: 'Unable to Reach Server',
+            message: err.message
+          }
+        } else {
+          // There's probably an error in your code
+          error.value = {
+            title: 'Application Error',
+            message: err.message
+          }
+        }
+      }
+      loading.value = false
+    }
+
+    const getZipData = async () => {
+      try {
+        zipError.value = null
+        zipLoading.value = true
+       
+        const zipdata = await getClientsByZipCode();
+        zips.value = zipdata;
+        zipLabels.value = zipdata.map((item) => item._id)
+        zipChartData.value = zipdata.map((item) => item.count)
+      } catch (err) {
+        if (err.response) {
+          // client received an error response (5xx, 4xx)
+          zipError.value = {
+            title: 'Server Response',
+            message: err.message
+          }
+        } else if (err.request) {
+          // client never received a response, or request never left
+          zipError.value = {
+            title: 'Unable to Reach Server',
+            message: err.message
+          }
+        } else {
+          // There's probably an error in your code
+          zipError.value = {
+            title: 'Application Error',
+            message: err.message
+          }
+        }
+      }
+      zipLoading.value = false
+    }
+
+    onMounted(() => {
+      getAttendanceData()
+      getZipData()
+    })
+
+    return {
+      recentEvents,
+      zips,
+      labels,
+      chartData,
+      zipLabels,
+      zipChartData,
+      loading,
+      error,
+      zipLoading,
+      zipError,
+      formatDate,
+    }
   }
 }
 </script>

@@ -76,7 +76,7 @@
     </main>
 </template>
 
-<script>
+<!-- <script>
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -135,5 +135,70 @@ export default {
         },
     }
 }
+</script> -->
+
+<script>
+import { ref } from 'vue';
+import { useToast } from 'vue-toastification';
+import { useVuelidate } from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import { createService } from '../api/api';
+import { useRouter } from 'vue-router';
+
+export default {
+  setup() {
+    // Reactive references for form fields
+    const service = ref({
+      name: '',
+      description: '',
+      status: 'Active' // Default status
+    });
+
+    // Toast notification setup
+    const toast = useToast();
+
+    // Vue Router setup
+    const router = useRouter();
+
+    // Vuelidate setup
+    const validations = {
+        service: {
+            name: { required },
+            description: { required }
+        }
+    };
+    const v$ = useVuelidate(validations, { service });
+    // Function to handle form submission
+    const handleSubmitForm = async () => {
+      try {
+        // Validate the form
+        v$.value.$touch();
+        if (v$.value.$error) return;
+
+        // Call the API to create a new service
+        await createService(service.value);
+        // Clear the form after successful submission
+        service.value.name = '';
+        service.value.description = '';
+        // Show success message
+        toast.success('Service created successfully!');
+        // Redirect to findservice.vue
+        router.push({ name: 'findservice' });
+      } catch (error) {
+        // Show error message if API call fails
+        toast.error('Error creating service: ' + error.message);
+      }
+    };
+
+    // Return variables and functions to be used in the template
+    return {
+      service,
+      v$,
+      handleSubmitForm
+    };
+  }
+};
+
 </script>
+
 
