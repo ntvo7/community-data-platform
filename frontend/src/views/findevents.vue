@@ -165,75 +165,78 @@ export default {
 }
 </script> -->
 
-<script>
-import { ref } from 'vue'
-import { getClients, searchClients } from '../api/api'
-import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
-
-export default {
-  setup() {
-    const searchBy = ref('Event Name')
-    const searchInput = ref('')
-    const events = ref([])
-    const hoverId = ref(null)
-    const toast = useToast()
-    const router = useRouter()
+<script setup>
+import { getEvents, searchEvents } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
 
 
-    const handleSubmitForm = async () => {
-      if (searchInput.value) {
-        try {
-          let response = []
-          if (searchBy.value === 'Event Name') {
-            response = await searchClients({ searchBy: 'name', name: searchInput.value })
-          } else if (searchBy.value === 'Event Date') {
-            response = await searchClients({ searchBy: 'date', date: searchInput.value })
-          }
-          events.value = response
-        } catch (error) {
-          toast.error(error)
-        }
-      }
-    }
+const toast = useToast();
 
-    const clearSearch = () => {
-      searchInput.value = ''
-      loadData()
-    }
+const events = ref(null);
+const searchBy = ref(null);
+const name = ref(null);
+const eventDate = ref(null);
+const hoverId = ref(null);
+const isLoading = ref(false);
 
-    const viewEventDetails = (eventId) => {
-      // Assuming there's a router instance available
-      router.push({ name: 'eventdetails', params: { id: eventId } })
-      console.log('View event details for event ID:', eventId)
-    }
 
-    const loadData = async () => {
+const loadData = async () => {
+
+  searchBy.value = null;
+  name.value = null;
+  eventDate.value = null;
+
+
+  isLoading.value = true;
+
+  try {
+    const response = await getEvents();
+    events.value = response;
+  } catch (error) {
+    toast.error('loadData error', error);
+  }
+};
+
+const handleSubmitForm = async () => {
+
+  if (searchBy.value === 'Event Name') {
+    if (name.value) {
       try {
-        const response = await getClients()
-        events.value = response
+        const query = {
+          searchBy: 'name',
+          name: name.value,
+        };
+        const response = await searchEvents(query);
+        events.value = response;
       } catch (error) {
-        toast.error(error)
+        toast.error('Error searching events', error);
       }
     }
 
-    const formatDate = (dateString) => {
-      // Format date as needed
-      return dateString
-    }
-
-    loadData()
-
-    return {
-      searchBy,
-      searchInput,
-      events,
-      hoverId,
-      handleSubmitForm,
-      clearSearch,
-      viewEventDetails,
-      formatDate
+  } else if (searchBy.value === 'Event Date') {
+    if (eventDate.value) {
+      try {
+        const formattedDate = new Date(eventDate.value).toISOString().substring(0, 10);
+        const query = {
+          searchBy: 'date',
+          eventDate: formattedDate,
+        };
+        const response = await searchEvents(query);
+        events.value = response;
+      } catch (error) {
+        toast.error('Error searching events:', error);
+      }
     }
   }
-}
+};
+
+
+const formatDate = (date) => {
+  const isoDate = new Date(date);
+  const year = isoDate.getUTCFullYear();
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(isoDate.getUTCDate()).padStart(2, '0');
+  return `${month}/${day}/${year}`;
+};
 </script>

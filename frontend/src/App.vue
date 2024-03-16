@@ -13,16 +13,6 @@ export default {
     const toast = useToast();
     const router = useRouter();
 
-    // const logout = () => {
-    //   try {
-    //     user.clearSessionData();
-    //     // Assuming $router is available here
-    //     // If not, you might need to use provide/inject to pass router instance
-    //     router.push('/');
-    //   } catch (error) {
-    //     toast.error('Logout error', error);
-    //   }
-    // };
     const logout = () => {
       try {
         user.logout(); // Call the logout action from loggedInUser.js
@@ -31,8 +21,6 @@ export default {
         toast.error('Logout error', error);
       }
     };
-
-
     const fetchOrgName = async () => {
       try {
         orgName.value = await getOrgName();
@@ -45,7 +33,7 @@ export default {
 
     return { user, orgName, logout };
   }
-};
+}
 </script>
 
 <template>
