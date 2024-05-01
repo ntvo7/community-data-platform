@@ -31,7 +31,7 @@
     </div>
 </template>
 
-<script>
+<!-- <script>
 import { useLoggedInUserStore } from "../store/loggedInUser";
 import { ref } from 'vue';
 
@@ -48,6 +48,14 @@ export default {
     };
   }
 }
-</script>
+</script> -->
 
+<script setup>
+import { useLoggedInUserStore } from "../store/loggedInUser";
+import { ref } from 'vue';
+
+const username = ref('');
+const password = ref('');
+const store = useLoggedInUserStore();
+</script>
 
