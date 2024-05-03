@@ -175,84 +175,69 @@
   </main>
 </template>
 
-<!-- <script>
-//import functionalities for validation
-import useVuelidate from '@vuelidate/core'
-import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators'
-import { createClient } from '../api/api'
-import { useToast } from 'vue-toastification'
+<!-- <script setup>
+import { ref } from 'vue';
+import { useVuelidate } from '@vuelidate/core';
+import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators';
+import { createClient } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
 
-//Notifications
-const toast = useToast()
+const client = ref({
+  firstName: '',
+  middleName: '',
+  lastName: '',
+  email: '',
+  phoneNumber: {
+    primary: '',
+    alternate: ''
+  },
+  address: {
+    line1: '',
+    line2: '',
+    city: '',
+    county: '',
+    zip: ''
+  },
+});
 
-export default {
-  data() {
-    return {
-      //client variable to hold new client information
-      client: {
-        firstName: null,
-        middleName: null,
-        lastName: null,
-        email: null,
-        phoneNumber: {
-          primary: null,
-          alternate: null
-        },
-        address: {
-          line1: null,
-          line2: null,
-          city: null,
-          county: null,
-          zip: null
-        },
-      }
-    }
-  },
-  setup() {
-    // Register Vuelidate
-    const v$ = useVuelidate();
-    return { v$ };
-  },
-  validations() {
-    // validations for client
-    return {
-      client: {
-        firstName: { required },
-        lastName: { required },
-        email: { required, email },
-        phoneNumber: {
-          primary: {
-            required,
-            numeric,
-            minLength: minLength(10),
-            maxLength: maxLength(10),
-          },
-        },
-        address: {
-          city: { required },
-        },
-      },
-    };
-  },
-  methods: {
-    // method called when user submits the form
-    async submitForm() {
-      // Trigger validation
-      this.v$.$validate();
-      if (this.v$.$error) {
-        // Form is invalid, do not proceed
-        return;
-      }
-      try {
-        const response = await createClient(this.client);
-        this.$router.push('/findclient')
-        toast.success(response)
-      } catch (error) {
-        toast.error(error)
-      }
+const toast = useToast();
+const router = useRouter();
+
+const rules = {
+  client: {
+    firstName: { required },
+    lastName: { required },
+    email: { required, email },
+    phoneNumber: {
+      primary: { required, numeric, minLength: minLength(10), maxLength: maxLength(10) },
+      alternate: { numeric, minLength: minLength(10), maxLength: maxLength(10) }
     },
+    address: {
+      line1: { required },
+      city: { required },
+      zip: { required, numeric, minLength: minLength(5), maxLength: maxLength(5) }
+    }
   }
-}
+};
+
+const v$ = useVuelidate(rules, client);
+
+const submitForm = async () => {
+  // v$.$validate();
+
+  // if (v$.$error) {
+  //   return;
+  // }
+
+  try {
+    const response = await createClient(client.value);
+    toast.success('Client created successfully!');
+    router.push({ name: 'findclient' });
+  } catch (error) {
+    toast.error(error.message || 'An error occurred');
+  }
+};
 </script> -->
 
 <script>
@@ -262,7 +247,7 @@ import { required, email, numeric, minLength, maxLength } from '@vuelidate/valid
 import { createClient } from '../api/api';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
-
+ 
 export default {
   setup() {
     const client = ref({
@@ -282,10 +267,10 @@ export default {
         zip: ''
       },
     });
-
+ 
     const toast = useToast();
     const router = useRouter();
-
+ 
     const rules = {
       client: {
         firstName: { required },
@@ -303,14 +288,14 @@ export default {
       }
     };
     const v$ = useVuelidate(rules, client);
-
+ 
     const submitForm = async () => {
       // v$.$validate();
-
+ 
       // if (v$.$error) {
       //   return;
       // }
-
+ 
       try {
         const response = await createClient(client.value);
         toast.success('Client created successfully!');
@@ -321,7 +306,7 @@ export default {
         toast.error(error.message || 'An error occurred');
       }
     };
-
+ 
     return {
       client,
       v$,
@@ -330,6 +315,5 @@ export default {
   }
 };
 </script>
-
 
 

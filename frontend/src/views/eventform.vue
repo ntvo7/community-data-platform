@@ -166,12 +166,12 @@ import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { getServices, createEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
-
-
+ 
+ 
 //Notifications
 const toast = useToast()
-
-
+ 
+ 
 export default {
   data() {
     return {
@@ -207,15 +207,15 @@ export default {
       const date = new Date(value)
       return !isNaN(date)
     }
-
-
+ 
+ 
     // prevents form submission if new event has a date before the current date
     const notBeforeToday = (value) => {
       const today = new Date()
       return value >= today.toISOString().split('T')[0]
     }
-
-
+ 
+ 
     return {
       event: {
         name: { required },
@@ -241,15 +241,15 @@ export default {
     async handleSubmitForm() {
       // Trigger validation
       this.v$.$validate();
-
-
+ 
+ 
       if (this.v$.$error) {
         toast.error('Please fix input field errors')
         // Form is invalid, do not proceed
         return;
       }
-
-
+ 
+ 
       try {
         const response = await createEvent(this.event);
         this.$router.push('/findevents')
@@ -261,16 +261,16 @@ export default {
   },
 }
 </script> -->
-
-<script>
+ 
+<!-- <script>
 import { ref } from 'vue'
 import { useVuelidate } from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { getServices, createEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router';
-
-
+ 
+ 
 export default {
   setup() {
     const event = ref({
@@ -291,19 +291,19 @@ export default {
     const errors = ref({})
     const toast = useToast()
     const router = useRouter()
-
-
+ 
+ 
     const v$ = useVuelidate()
-
+ 
     const handleSubmitForm = async () => {
       // v$.$validate()
-
+ 
       // if (v$.$error) {
       //   errors.value = v$.$errors
       //   toast.error('Please fix input field errors')
       //   return
       // }
-
+ 
       try {
         const response = await createEvent(event.value)
         // Assuming there's a router instance available
@@ -314,7 +314,7 @@ export default {
         toast.error('Error creating new event:', error)
       }
     }
-
+ 
     const fetchServices = async () => {
       try {
         const response = await getServices()
@@ -323,9 +323,83 @@ export default {
         toast.error(error)
       }
     }
-
+ 
     fetchServices()
+ 
+    return {
+      event,
+      activeServices,
+      errors,
+      handleSubmitForm
+    }
+  }
+}
+</script> -->
 
+<script>
+import { ref } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { getServices, createEvent } from '../api/api'
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router';
+ 
+ 
+export default {
+  setup() {
+    const event = ref({
+      name: '',
+      description: '',
+      date: '',
+      services: [],
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        zip: ''
+      },
+      attendees: []
+    })
+    const activeServices = ref([])
+    const errors = ref({})
+    const toast = useToast()
+    const router = useRouter()
+ 
+ 
+    const v$ = useVuelidate()
+ 
+    const handleSubmitForm = async () => {
+      // v$.$validate()
+ 
+      // if (v$.$error) {
+      //   errors.value = v$.$errors
+      //   toast.error('Please fix input field errors')
+      //   return
+      // }
+ 
+      try {
+        const response = await createEvent(event.value)
+        // Assuming there's a router instance available
+        // this.$router.push('/findevents')
+        router.push({ name: 'findevents' });
+        toast.success(response)
+      } catch (error) {
+        toast.error('Error creating new event:', error)
+      }
+    }
+ 
+    const fetchServices = async () => {
+      try {
+        const response = await getServices()
+        activeServices.value = response.filter(item => item.status === "Active")
+      } catch (error) {
+        toast.error(error)
+      }
+    }
+ 
+    fetchServices()
+ 
     return {
       event,
       activeServices,
@@ -335,7 +409,6 @@ export default {
   }
 }
 </script>
-
 
 
 

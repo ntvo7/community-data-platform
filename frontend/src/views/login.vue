@@ -34,45 +34,15 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import { useLoggedInUserStore } from "../store/loggedInUser";
 
-export default {
-  setup() {
-    const username = ref('');
-    const password = ref('');
-    const store = useLoggedInUserStore();
+const username = ref('');
+const password = ref('');
+const store = useLoggedInUserStore();
 
-    const login = () => {
-      store.login(username.value, password.value);
-    };
-
-    return {
-      username,
-      password,
-      login
-    }
-  }
-}
+const login = () => {
+  store.login(username.value, password.value);
+};
 </script>
-
-<!-- <script>
-  import { useLoggedInUserStore } from "../store/loggedInUser";
-
-
-  export default {
-    data() {
-      return {
-        username: "",
-        password: "",
-      }
-    },
-    setup() {
-      const store = useLoggedInUserStore();
-      return {
-        store
-      }
-    }
-  }
-</script> -->

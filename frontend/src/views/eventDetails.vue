@@ -322,3 +322,99 @@ export default {
 }
 </script>
 
+<!-- <script setup>
+import { ref, onMounted } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import { useLoggedInUserStore } from "../store/loggedInUser";
+import { getEventById, getEventAttendees, getServices, updateEvent, deleteEvent } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter, useRoute } from 'vue-router';
+
+const clients = ref([]);
+const services = ref([]);
+const event = ref({
+  name: null,
+  description: null,
+  date: null,
+  address: {
+    line1: null,
+    line2: null,
+    city: null,
+    county: null,
+    zip: null
+  },
+  attendees: [],
+  services: []
+});
+const hoverId = ref(null);
+
+const toast = useToast();
+const router = useRouter();
+const route = useRoute();
+const user = useLoggedInUserStore();
+
+const validDate = (value) => {
+  const date = new Date(value);
+  return !isNaN(date);
+};
+
+const rules = {
+  name: { required },
+  date: {
+    required,
+    validDate
+  },
+};
+const v$ = useVuelidate(rules, event);
+
+const submitEventUpdate = async () => {
+  v$.$validate();
+  if (v$.$error) {
+    toast.error('Please fix input field errors');
+    return;
+  }
+
+  try {
+    const response = await updateEvent(route.params.id, event.value);
+    toast.success(response);
+    router.push('/findevents');
+  } catch (error) {
+    toast.error('Error updating event', error);
+  }
+};
+
+const submitDeleteEvent = async () => {
+  if (event.value.attendees.length > 0) {
+    toast.info('Event cannot be deleted since it has attendees.');
+    return;
+  }
+
+  try {
+    const response = await deleteEvent(route.params.id);
+    toast.success(response);
+    router.push('/findevents');
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
+onMounted(async () => {
+  try {
+    const [eventResponse, clientsResponse, servicesResponse] = await Promise.all([
+      getEventById(route.params.id),
+      getEventAttendees(route.params.id),
+      getServices()
+    ]);
+
+    eventResponse.date = new Date(eventResponse.date).toISOString().substring(0, 10);
+    event.value = eventResponse;
+    clients.value = clientsResponse;
+    services.value = servicesResponse;
+  } catch (error) {
+    toast.error('Error loading data', error);
+  }
+});
+</script> -->
+
+

@@ -165,6 +165,72 @@ export default {
 }
 </script> -->
 
+<!-- <script setup>
+import { getClients, searchClients } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
+
+
+const toast = useToast();
+
+
+const clients = ref(null);
+const searchBy = ref('');
+const firstName = ref('');
+const lastName = ref('');
+const phoneNumber = ref('');
+const hoverId = ref(null);
+
+const loadData = async () => {
+
+  searchBy.value = '';
+  firstName.value = '';
+  lastName.value = '';
+  phoneNumber.value = '';
+
+  try {
+    const response = await getClients();
+    clients.value = response;
+  } catch (error) {
+    toast.error(error);
+  }
+};
+
+const handleSubmitForm = async () => {
+
+  if (searchBy.value === 'Client Name') {
+    if (firstName.value || lastName.value) {
+      try {
+        const query = {
+          searchBy: 'name',
+          firstName: firstName.value,
+          lastName: lastName.value,
+        };
+        const response = await searchClients(query);
+        clients.value = response;
+      } catch (error) {
+        toast.error(error);
+      }
+    }
+
+  } else if (searchBy.value === 'Client Number') {
+    if (phoneNumber.value) {
+      try {
+        const query = {
+          searchBy: 'number',
+          phoneNumber: phoneNumber.value,
+        };
+        const response = await searchClients(query);
+        clients.value = response;
+      } catch (error) {
+        toast.error(error);
+      }
+    }
+  }
+};
+
+</script> -->
+
 <script setup>
 import { getEvents, searchEvents } from '../api/api';
 import { useToast } from 'vue-toastification';

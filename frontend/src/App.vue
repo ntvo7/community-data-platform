@@ -1,41 +1,4 @@
 <!-- This is the main frontend file. It displays a navigation bar and rendered components. -->
-<script>
-import { ref } from 'vue';
-import { useLoggedInUserStore } from './store/loggedInUser';
-import { getOrgName } from './api/api';
-import { useToast } from 'vue-toastification';
-import { useRouter } from 'vue-router';
-
-export default {
-  setup() {
-    const user = useLoggedInUserStore();
-    const orgName = ref("Dataplatform");
-    const toast = useToast();
-    const router = useRouter();
-
-    const logout = () => {
-      try {
-        user.logout(); // Call the logout action from loggedInUser.js
-        router.push('/'); // Navigate to the home page
-      } catch (error) {
-        toast.error('Logout error', error);
-      }
-    };
-    const fetchOrgName = async () => {
-      try {
-        orgName.value = await getOrgName();
-      } catch (error) {
-        throw error;
-      }
-    };
-
-    fetchOrgName();
-
-    return { user, orgName, logout };
-  }
-}
-</script>
-
 <template>
   <main class="flex flex-row">
     <div id="_container" class="min-h-screen">
@@ -123,6 +86,38 @@ export default {
     </div>
   </main>
 </template>
+
+<script setup>
+import { ref } from 'vue';
+import { useLoggedInUserStore } from './store/loggedInUser';
+import { getOrgName } from './api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter } from 'vue-router';
+
+const user = useLoggedInUserStore();
+const orgName = ref("Dataplatform");
+const toast = useToast();
+const router = useRouter();
+
+const logout = () => {
+  try {
+    user.logout(); // Call the logout action from loggedInUser.js
+    router.push('/'); // Navigate to the home page
+  } catch (error) {
+    toast.error('Logout error', error);
+  }
+};
+
+const fetchOrgName = async () => {
+  try {
+    orgName.value = await getOrgName();
+  } catch (error) {
+    throw error;
+  }
+};
+
+fetchOrgName();
+</script>
 
 <style scoped>
 #_container {
