@@ -32,7 +32,7 @@
             <li v-if="user.role === 'editor'">
               <router-link to="/clientform">
                 <span style="position: relative; top: 6px" class="material-icons">people</span>
-                Client Intake Form
+                Client Form
               </router-link>
             </li>
             <!-- Create Event link - only shows if user is an editor -->
