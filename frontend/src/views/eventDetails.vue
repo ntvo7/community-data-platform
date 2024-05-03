@@ -23,7 +23,7 @@
             </span>
           </label>
         </div>
-
+ 
         <!-- Date input field -->
         <div class="flex flex-col">
           <label class="block">
@@ -42,7 +42,7 @@
             </span>
           </label>
         </div>
-
+ 
         <div></div>
         <div></div>
         <!-- Description input field -->
@@ -55,7 +55,7 @@
           </label>
         </div>
       </div>
-
+ 
       <!-- Services Offered at Event checkboxes -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 mt-10">
         <h2 class="text-2xl font-bold">Services Offered at Event</h2>
@@ -78,7 +78,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- grid container -->
       <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
         <h2 class="text-2xl font-bold">Address</h2>
@@ -129,7 +129,7 @@
           </label>
         </div>
       </div>
-
+ 
       <!-- grid container -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
         <div></div>
@@ -154,9 +154,9 @@
           </button>
         </div>
       </div>
-
+ 
       <hr class="mt-10 mb-10" />
-
+ 
       <!-- grid container -->
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
         <div>
@@ -174,7 +174,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-300">
-              <tr @click="$router.push({name: 'clientdetails', params: { id: client._id } })" 
+              <tr @click="$router.push({name: 'clientdetails', params: { id: client._id } })"
               v-for="client in clients" :key="client._id" class="cursor-pointer"
                 :class="{ 'hoverRow': hoverId === client._id }" @mouseenter="hoverId = client._id"
                 @mouseleave="hoverId = null">
@@ -194,6 +194,112 @@
   </main>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import { useLoggedInUserStore } from "../store/loggedInUser";
+import { getEventById, getEventAttendees, getServices, updateEvent, deleteEvent } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter, useRoute } from 'vue-router';
+
+
+const clients = ref([]);
+const services = ref([]);
+const event = ref({
+ name: null,
+ description: null,
+ date: null,
+ address: {
+   line1: null,
+   line2: null,
+   city: null,
+   county: null,
+   zip: null
+ },
+ attendees: [],
+ services: []
+});
+const hoverId = ref(null);
+
+
+const toast = useToast();
+const router = useRouter();
+const route = useRoute();
+const user = useLoggedInUserStore();
+
+
+const validDate = (value) => {
+ const date = new Date(value);
+ return !isNaN(date);
+};
+
+
+const rules = {
+ name: { required },
+ date: {
+   required,
+   validDate
+ },
+};
+const v$ = useVuelidate(rules, event);
+
+
+const submitEventUpdate = async () => {
+ v$.$validate();
+ if (v$.$error) {
+   toast.error('Please fix input field errors');
+   return;
+ }
+
+
+ try {
+   const response = await updateEvent(route.params.id, event.value);
+   toast.success(response);
+   router.push('/findevents');
+ } catch (error) {
+   toast.error('Error updating event', error);
+ }
+};
+
+
+const submitDeleteEvent = async () => {
+ if (event.value.attendees.length > 0) {
+   toast.info('Event cannot be deleted since it has attendees.');
+   return;
+ }
+
+
+ try {
+   const response = await deleteEvent(route.params.id);
+   toast.success(response);
+   router.push('/findevents');
+ } catch (error) {
+   toast.error(error.message);
+ }
+};
+
+
+onMounted(async () => {
+ try {
+   const [eventResponse, clientsResponse, servicesResponse] = await Promise.all([
+     getEventById(route.params.id),
+     getEventAttendees(route.params.id),
+     getServices()
+   ]);
+
+
+   eventResponse.date = new Date(eventResponse.date).toISOString().substring(0, 10);
+   event.value = eventResponse;
+   clients.value = clientsResponse;
+   services.value = servicesResponse;
+ } catch (error) {
+   toast.error('Error loading data', error);
+ }
+});
+</script>
+
+ 
 <!-- <script>
 //import vuelidate functionalities
 import useVuelidate from '@vuelidate/core'
@@ -201,12 +307,10 @@ import { required } from '@vuelidate/validators'
 import { useLoggedInUserStore } from "../store/loggedInUser";
 import { getEventById, getEventAttendees, getServices, updateEvent, deleteEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
-
-
+ 
 //Notifications
 const toast = useToast()
-
-
+ 
 export default {
   data() {
     return {
@@ -245,8 +349,7 @@ export default {
       const date = new Date(value)
       return !isNaN(date)
     }
-
-
+ 
     return {
       event: {
         name: { required },
@@ -265,17 +368,14 @@ export default {
         getEventAttendees(this.$route.params.id),
         getServices(),
       ]);
-
-
+ 
       eventResponse.date = new Date(eventResponse.date).toISOString().substring(0, 10);
-
-
+ 
       this.event = eventResponse;
       this.clients = clientsResponse;
       this.services = servicesResponse;
      // this.inactiveServices = servicesResponse.filter(item => item.status === "Inactive")
-
-
+ 
     } catch (error) {
       toast.error('error loading data', error)
     }
@@ -285,14 +385,12 @@ export default {
     async submitEventUpdate() {
       // Trigger validation
       this.v$.$validate();
-
-
+ 
       if (this.v$.$error) {
         // Form is invalid, do not proceed
         return;
       }
-
-
+ 
       try {
         const response = await updateEvent(this.$route.params.id, this.event);
         toast.success(response)
@@ -301,8 +399,7 @@ export default {
         toast.error('error updating event', error)
       }
     },
-
-
+ 
     // method to make the API call to delete the event - can only be deleted if no attendees are in event
     async submitDeleteEvent() {
       try {
@@ -321,100 +418,3 @@ export default {
   }
 }
 </script> -->
-
-<script setup>
-import { ref, onMounted } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
-import { useLoggedInUserStore } from "../store/loggedInUser";
-import { getEventById, getEventAttendees, getServices, updateEvent, deleteEvent } from '../api/api';
-import { useToast } from 'vue-toastification';
-import { useRouter, useRoute } from 'vue-router';
-
-const clients = ref([]);
-const services = ref([]);
-const event = ref({
-  name: null,
-  description: null,
-  date: null,
-  address: {
-    line1: null,
-    line2: null,
-    city: null,
-    county: null,
-    zip: null
-  },
-  attendees: [],
-  services: []
-});
-const hoverId = ref(null);
-
-const toast = useToast();
-const router = useRouter();
-const route = useRoute();
-const user = useLoggedInUserStore();
-
-const validDate = (value) => {
-  const date = new Date(value);
-  return !isNaN(date);
-};
-
-const rules = {
-  name: { required },
-  date: {
-    required,
-    validDate
-  },
-};
-const v$ = useVuelidate(rules, event);
-
-const submitEventUpdate = async () => {
-  v$.$validate();
-  if (v$.$error) {
-    toast.error('Please fix input field errors');
-    return;
-  }
-
-  try {
-    const response = await updateEvent(route.params.id, event.value);
-    toast.success(response);
-    router.push('/findevents');
-  } catch (error) {
-    toast.error('Error updating event', error);
-  }
-};
-
-const submitDeleteEvent = async () => {
-  if (event.value.attendees.length > 0) {
-    toast.info('Event cannot be deleted since it has attendees.');
-    return;
-  }
-
-  try {
-    const response = await deleteEvent(route.params.id);
-    toast.success(response);
-    router.push('/findevents');
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
-
-onMounted(async () => {
-  try {
-    const [eventResponse, clientsResponse, servicesResponse] = await Promise.all([
-      getEventById(route.params.id),
-      getEventAttendees(route.params.id),
-      getServices()
-    ]);
-
-    eventResponse.date = new Date(eventResponse.date).toISOString().substring(0, 10);
-    event.value = eventResponse;
-    clients.value = clientsResponse;
-    services.value = servicesResponse;
-  } catch (error) {
-    toast.error('Error loading data', error);
-  }
-});
-</script>
-
-

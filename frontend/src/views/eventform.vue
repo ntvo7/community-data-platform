@@ -14,7 +14,7 @@
         <!-- grid container -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <h2 class="text-2xl font-bold">Event Details</h2>
-
+ 
           <!-- Event Name Input Field -->
           <div class="flex flex-col">
             <label class="block">
@@ -24,15 +24,12 @@
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 v-model="event.name" />
             </label>
-            <!-- Validation error messages -->      <!-- go back -->
-            <!-- <span v-if="v$.event.name.$error" class="text-red-500">
+            <!-- Validation error messages -->
+            <span v-if="v$.event.name.$error" class="text-red-500">
               Event Name is required
-            </span> -->
-            <span v-if="errors.name" class="text-red-500">
-              {{ errors.name }}
             </span>
           </div>
-
+ 
           <!-- Date input field -->
           <div class="flex flex-col">
             <label class="block">
@@ -42,8 +39,8 @@
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                 v-model="event.date" type="date" />
             </label>
-            <!-- Validation error messages -->            <!-- go back -->
-            <!-- <span v-if="v$.event.date.$error" class="text-red-500">
+            <!-- Validation error messages -->
+            <span v-if="v$.event.date.$error" class="text-red-500">
               <span v-if="v$.event.date.required.$invalid">
                 Event Date is required
               </span>
@@ -54,12 +51,9 @@
                 v-else-if="!v$.event.date.required.$invalid && !v$.event.date.validDate.$invalid && v$.event.date.notBeforeToday.$invalid">
                 New Event Date cannot be in the past.
               </span>
-            </span> -->
-            <span v-if="errors.date" class="text-red-500">
-              {{ errors.date }}
             </span>
           </div>
-
+ 
           <div></div>
           <div></div>
           <!-- Description input field -->
@@ -68,11 +62,11 @@
               <span class="text-gray-700">Description</span>
               <textarea
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                rows="2" v-model="event.description"></textarea> <!-- go back -->
+                rows="2"></textarea>
             </label>
           </div>
         </div>
-
+ 
         <!-- Services Offered at Event checkboxes -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 mt-10">
           <h2 class="text-2xl font-bold">Services Offered at Event</h2>
@@ -88,13 +82,13 @@
                     <span class="font-medium">{{ service.name }}</span>
                   </label>
                 </li>
-              </ul> 
+              </ul>
               <!--If there are no active services for the user's organization, this will appear instead of list of checkboxes-->
               <p v-else class="text-gray-600">No Active Services Available</p>
             </div>
           </div>
         </div>
-
+ 
         <!-- grid container -->
         <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <h2 class="text-2xl font-bold">Address</h2>
@@ -145,7 +139,7 @@
             </label>
           </div>
         </div>
-
+ 
         <!--Add New Event submit button-->
         <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <div></div>
@@ -159,77 +153,71 @@
     </div>
   </main>
 </template>
-
-<script>
-import { ref } from 'vue'
-import { useVuelidate } from '@vuelidate/core'
+ 
+<script setup>
+import { reactive, onMounted } from 'vue'
+import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { getServices, createEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router';
- 
- 
-export default {
-  setup() {
-    const event = ref({
-      name: '',
-      description: '',
-      date: '',
-      services: [],
-      address: {
-        line1: '',
-        line2: '',
-        city: '',
-        county: '',
-        zip: ''
-      },
-      attendees: []
-    })
-    const activeServices = ref([])
-    const errors = ref({})
-    const toast = useToast()
-    const router = useRouter()
- 
- 
-    const v$ = useVuelidate()
- 
-    const handleSubmitForm = async () => {
-      // v$.$validate()
- 
-      // if (v$.$error) {
-      //   errors.value = v$.$errors
-      //   toast.error('Please fix input field errors')
-      //   return
-      // }
- 
-      try {
-        const response = await createEvent(event.value)
-        // Assuming there's a router instance available
-        // this.$router.push('/findevents')
-        router.push({ name: 'findevents' });
-        toast.success(response)
-      } catch (error) {
-        toast.error('Error creating new event:', error)
-      }
+import { useRouter } from 'vue-router'
+
+const toast = useToast()
+const router = useRouter()
+
+const event = reactive({
+  name: null,
+  description: null,
+  date: null,
+  services: [],
+  address: {
+    line1: null,
+    line2: null,
+    city: null,
+    county: null,
+    zip: null
+  },
+  attendees: []
+})
+
+const activeServices = reactive([])
+
+const validations = {
+  event: {
+    name: { required },
+    date: {
+      required,
+      validDate: value => !isNaN(new Date(value)),
+      notBeforeToday: value => value >= new Date().toISOString().split('T')[0]
     }
- 
-    const fetchServices = async () => {
-      try {
-        const response = await getServices()
-        activeServices.value = response.filter(item => item.status === "Active")
-      } catch (error) {
-        toast.error(error)
-      }
-    }
- 
-    fetchServices()
- 
-    return {
-      event,
-      activeServices,
-      errors,
-      handleSubmitForm
-    }
+  }
+}
+
+const v$ = useVuelidate(validations, { event })
+
+onMounted(async () => {
+  try {
+    const response = await getServices()
+    activeServices.splice(0, activeServices.length, ...response.filter(item => item.status === 'Active'))
+  } catch (error) {
+    toast.error(error)
+  }
+})
+
+const handleSubmitForm = async () => {
+  v$.value.$validate()
+
+  if (v$.value.$error) {
+    toast.error('Please fix input field errors')
+    return
+  }
+
+  try {
+    const response = await createEvent(event)
+    toast.success(response)
+    router.push('/findevents')
+  } catch (error) {
+    toast.error('Error creating new event:', error)
   }
 }
 </script>
@@ -241,10 +229,8 @@ import { required } from '@vuelidate/validators'
 import { getServices, createEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
  
- 
 //Notifications
 const toast = useToast()
- 
  
 export default {
   data() {
@@ -282,13 +268,11 @@ export default {
       return !isNaN(date)
     }
  
- 
     // prevents form submission if new event has a date before the current date
     const notBeforeToday = (value) => {
       const today = new Date()
       return value >= today.toISOString().split('T')[0]
     }
- 
  
     return {
       event: {
@@ -316,13 +300,11 @@ export default {
       // Trigger validation
       this.v$.$validate();
  
- 
       if (this.v$.$error) {
         toast.error('Please fix input field errors')
         // Form is invalid, do not proceed
         return;
       }
- 
  
       try {
         const response = await createEvent(this.event);
@@ -335,7 +317,6 @@ export default {
   },
 }
 </script> -->
-
 
 
 

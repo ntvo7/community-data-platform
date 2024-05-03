@@ -49,7 +49,7 @@
         </div>
       </div>
     </div>
-
+ 
     <hr class="mt-10 mb-10" />
     <!-- Display Found Data -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
@@ -82,227 +82,164 @@
     </div>
   </main>
 </template>
-
+ 
 <script setup>
-import { getEvents, searchEvents } from '../api/api';
-import { useToast } from 'vue-toastification';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { getEvents, searchEvents } from '../api/api'
+import { useToast } from 'vue-toastification'
 
+const toast = useToast()
+const router = useRouter()
 
-const toast = useToast();
-
-const events = ref(null);
-const searchBy = ref(null);
-const name = ref(null);
-const eventDate = ref(null);
-const hoverId = ref(null);
-const isLoading = ref(false);
-
+const events = ref(null)
+const searchBy = ref(null)
+const name = ref(null)
+const eventDate = ref(null)
+const hoverId = ref(null)
 
 const loadData = async () => {
-
-  searchBy.value = null;
-  name.value = null;
-  eventDate.value = null;
-
-
-  isLoading.value = true;
+  searchBy.value = null
+  name.value = null
+  eventDate.value = null
 
   try {
-    const response = await getEvents();
-    events.value = response;
+    const response = await getEvents()
+    events.value = response
   } catch (error) {
-    toast.error('loadData error', error);
+    toast.error('Load data error', error)
   }
-};
+}
 
 const handleSubmitForm = async () => {
-
-  if (searchBy.value === 'Event Name') {
-    if (name.value) {
-      try {
-        const query = {
-          searchBy: 'name',
-          name: name.value,
-        };
-        const response = await searchEvents(query);
-        events.value = response;
-      } catch (error) {
-        toast.error('Error searching events', error);
+  if (searchBy.value === 'Event Name' && name.value) {
+    try {
+      const query = {
+        searchBy: 'name',
+        name: name.value
       }
+      const response = await searchEvents(query)
+      events.value = response
+    } catch (error) {
+      toast.error('Error searching events', error)
     }
-
-  } else if (searchBy.value === 'Event Date') {
-    if (eventDate.value) {
-      try {
-        const formattedDate = new Date(eventDate.value).toISOString().substring(0, 10);
-        const query = {
-          searchBy: 'date',
-          eventDate: formattedDate,
-        };
-        const response = await searchEvents(query);
-        events.value = response;
-      } catch (error) {
-        toast.error('Error searching events:', error);
+  } else if (searchBy.value === 'Event Date' && eventDate.value) {
+    try {
+      const formattedDate = new Date(eventDate.value).toISOString().substring(0, 10)
+      const query = {
+        searchBy: 'date',
+        eventDate: formattedDate
       }
+      const response = await searchEvents(query)
+      events.value = response
+    } catch (error) {
+      toast.error('Error searching events', error)
     }
   }
-};
+}
 
+const navigateToEventDetails = (id) => {
+  router.push({ name: 'eventdetails', params: { id } })
+}
 
 const formatDate = (date) => {
-  const isoDate = new Date(date);
-  const year = isoDate.getUTCFullYear();
-  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(isoDate.getUTCDate()).padStart(2, '0');
-  return `${month}/${day}/${year}`;
-};
+  const isoDate = new Date(date)
+  const year = isoDate.getUTCFullYear()
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(isoDate.getUTCDate()).padStart(2, '0')
+  return `${month}/${day}/${year}`
+}
+
+onMounted(loadData)
 </script>
 
 <!-- <script>
-import { getClients, searchClients } from '../api/api'
+import { getEvents, searchEvents } from '../api/api'
 import { useToast } from 'vue-toastification'
-
-
+ 
 //Notifications
 const toast = useToast()
-
-
+ 
 export default {
   data() {
     return {
-      //variable to store all clients and their information for the organization
-      clients: null,
+      //variable to hold all events for the organization
+      events: null,
       // Parameters for search to occur
-      searchBy: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
+      searchBy: null,
+      name: null,
+      eventDate: null,
       // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
       hoverId: null,
     }
   },
   mounted() {
-    // when component is mounted, load the data -
-    this.loadData()
+    // when component is mounted, load the data
+    this.loadData();
   },
   methods: {
     // method called when component is mounted
     async loadData() {
-      // Resets all the variables
-      this.searchBy = ''
-      this.firstName = ''
-      this.lastName = ''
-      this.phoneNumber = ''
-
-
-      // get list of clients
+      // Resets variables used for search
+      this.searchBy = null
+      this.name = null
+      this.eventDate = null
+ 
+      // show loading wheel
+      this.isLoading = true;
+      // get list of events
       try {
-        const response = await getClients();
-        this.clients = response;
+        const response = await getEvents();
+        this.events = response;
       } catch (error) {
-        toast.error(error)
+        toast.error('loadData error', error)
       }
     },
-    // method called when user searches for clients
+ 
+    // method called when user searches for an event
     async handleSubmitForm() {
-      // if user searched by client name
-      if (this.searchBy === 'Client Name') {
-        if (this.firstName || this.lastName) {
+      // if user searches by event name
+      if (this.searchBy === 'Event Name') {
+        if (this.name) {
           try {
             const query = {
               searchBy: 'name',
-              firstName: this.firstName,
-              lastName: this.lastName,
-            }
-            const response = await searchClients(query)
-            this.clients = response;
+              name: this.name
+            };
+            const response = await searchEvents(query);
+            this.events = response;
           } catch (error) {
-            toast.error(error)
+            toast.error('Error searching events', error)
           }
         }
-        // if user searches by client phone number
-      } else if (this.searchBy === 'Client Number') {
-        if (this.phoneNumber) {
+        // if user searches by event date
+      } else if (this.searchBy === 'Event Date') {
+        if (this.eventDate) {
           try {
+            const eventDate = new Date(this.eventDate);
+            const formattedDate = eventDate.toISOString().substring(0, 10);
             const query = {
-              searchBy: 'number',
-              phoneNumber: this.phoneNumber
-            }
-            const response = await searchClients(query)
-            this.clients = response;
+              searchBy: 'date',
+              eventDate: formattedDate
+            };
+            const response = await searchEvents(query);
+            this.events = response;
           } catch (error) {
-            toast.error(error)
+            toast.error('Error searching events:', error)
           }
         }
       }
+    },
+ 
+    // method called for each event date so it will be formatted correctly on the table
+    formatDate(date) {
+      const isoDate = new Date(date);
+      const year = isoDate.getUTCFullYear();
+      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(isoDate.getUTCDate()).padStart(2, '0');
+      return `${month}/${day}/${year}`;
     },
   },
 }
 </script> -->
 
-<!-- <script setup>
-import { getClients, searchClients } from '../api/api';
-import { useToast } from 'vue-toastification';
-import { ref } from 'vue';
-
-
-const toast = useToast();
-
-
-const clients = ref(null);
-const searchBy = ref('');
-const firstName = ref('');
-const lastName = ref('');
-const phoneNumber = ref('');
-const hoverId = ref(null);
-
-const loadData = async () => {
-
-  searchBy.value = '';
-  firstName.value = '';
-  lastName.value = '';
-  phoneNumber.value = '';
-
-  try {
-    const response = await getClients();
-    clients.value = response;
-  } catch (error) {
-    toast.error(error);
-  }
-};
-
-const handleSubmitForm = async () => {
-
-  if (searchBy.value === 'Client Name') {
-    if (firstName.value || lastName.value) {
-      try {
-        const query = {
-          searchBy: 'name',
-          firstName: firstName.value,
-          lastName: lastName.value,
-        };
-        const response = await searchClients(query);
-        clients.value = response;
-      } catch (error) {
-        toast.error(error);
-      }
-    }
-
-  } else if (searchBy.value === 'Client Number') {
-    if (phoneNumber.value) {
-      try {
-        const query = {
-          searchBy: 'number',
-          phoneNumber: phoneNumber.value,
-        };
-        const response = await searchClients(query);
-        clients.value = response;
-      } catch (error) {
-        toast.error(error);
-      }
-    }
-  }
-};
-
-</script> -->
