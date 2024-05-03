@@ -175,7 +175,7 @@
   </main>
 </template>
 
-<!-- <script setup>
+<script setup>
 import { ref } from 'vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators';
@@ -235,12 +235,12 @@ const submitForm = async () => {
     toast.success('Client created successfully!');
     router.push({ name: 'findclient' });
   } catch (error) {
-    toast.error(error.message || 'An error occurred');
+    toast.error(error.message || 'Please fill in required field');
   }
 };
-</script> -->
+</script>
 
-<script>
+<!-- <script>
 import { ref } from 'vue';
 import { useVuelidate } from '@vuelidate/core';
 import { required, email, numeric, minLength, maxLength } from '@vuelidate/validators';
@@ -314,6 +314,6 @@ export default {
     };
   }
 };
-</script>
+</script> -->
 
 
