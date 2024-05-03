@@ -160,6 +160,80 @@
   </main>
 </template>
 
+<script>
+import { ref } from 'vue'
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { getServices, createEvent } from '../api/api'
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router';
+ 
+ 
+export default {
+  setup() {
+    const event = ref({
+      name: '',
+      description: '',
+      date: '',
+      services: [],
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        county: '',
+        zip: ''
+      },
+      attendees: []
+    })
+    const activeServices = ref([])
+    const errors = ref({})
+    const toast = useToast()
+    const router = useRouter()
+ 
+ 
+    const v$ = useVuelidate()
+ 
+    const handleSubmitForm = async () => {
+      // v$.$validate()
+ 
+      // if (v$.$error) {
+      //   errors.value = v$.$errors
+      //   toast.error('Please fix input field errors')
+      //   return
+      // }
+ 
+      try {
+        const response = await createEvent(event.value)
+        // Assuming there's a router instance available
+        // this.$router.push('/findevents')
+        router.push({ name: 'findevents' });
+        toast.success(response)
+      } catch (error) {
+        toast.error('Error creating new event:', error)
+      }
+    }
+ 
+    const fetchServices = async () => {
+      try {
+        const response = await getServices()
+        activeServices.value = response.filter(item => item.status === "Active")
+      } catch (error) {
+        toast.error(error)
+      }
+    }
+ 
+    fetchServices()
+ 
+    return {
+      event,
+      activeServices,
+      errors,
+      handleSubmitForm
+    }
+  }
+}
+</script>
+
 <!-- <script>
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
@@ -261,154 +335,8 @@ export default {
   },
 }
 </script> -->
- 
-<!-- <script>
-import { ref } from 'vue'
-import { useVuelidate } from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
-import { getServices, createEvent } from '../api/api'
-import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router';
- 
- 
-export default {
-  setup() {
-    const event = ref({
-      name: '',
-      description: '',
-      date: '',
-      services: [],
-      address: {
-        line1: '',
-        line2: '',
-        city: '',
-        county: '',
-        zip: ''
-      },
-      attendees: []
-    })
-    const activeServices = ref([])
-    const errors = ref({})
-    const toast = useToast()
-    const router = useRouter()
- 
- 
-    const v$ = useVuelidate()
- 
-    const handleSubmitForm = async () => {
-      // v$.$validate()
- 
-      // if (v$.$error) {
-      //   errors.value = v$.$errors
-      //   toast.error('Please fix input field errors')
-      //   return
-      // }
- 
-      try {
-        const response = await createEvent(event.value)
-        // Assuming there's a router instance available
-        // this.$router.push('/findevents')
-        router.push({ name: 'findevents' });
-        toast.success(response)
-      } catch (error) {
-        toast.error('Error creating new event:', error)
-      }
-    }
- 
-    const fetchServices = async () => {
-      try {
-        const response = await getServices()
-        activeServices.value = response.filter(item => item.status === "Active")
-      } catch (error) {
-        toast.error(error)
-      }
-    }
- 
-    fetchServices()
- 
-    return {
-      event,
-      activeServices,
-      errors,
-      handleSubmitForm
-    }
-  }
-}
-</script> -->
 
-<script>
-import { ref } from 'vue'
-import { useVuelidate } from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
-import { getServices, createEvent } from '../api/api'
-import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router';
- 
- 
-export default {
-  setup() {
-    const event = ref({
-      name: '',
-      description: '',
-      date: '',
-      services: [],
-      address: {
-        line1: '',
-        line2: '',
-        city: '',
-        county: '',
-        zip: ''
-      },
-      attendees: []
-    })
-    const activeServices = ref([])
-    const errors = ref({})
-    const toast = useToast()
-    const router = useRouter()
- 
- 
-    const v$ = useVuelidate()
- 
-    const handleSubmitForm = async () => {
-      // v$.$validate()
- 
-      // if (v$.$error) {
-      //   errors.value = v$.$errors
-      //   toast.error('Please fix input field errors')
-      //   return
-      // }
- 
-      try {
-        const response = await createEvent(event.value)
-        // Assuming there's a router instance available
-        // this.$router.push('/findevents')
-        router.push({ name: 'findevents' });
-        toast.success(response)
-      } catch (error) {
-        toast.error('Error creating new event:', error)
-      }
-    }
- 
-    const fetchServices = async () => {
-      try {
-        const response = await getServices()
-        activeServices.value = response.filter(item => item.status === "Active")
-      } catch (error) {
-        toast.error(error)
-      }
-    }
- 
-    fetchServices()
- 
-    return {
-      event,
-      activeServices,
-      errors,
-      handleSubmitForm
-    }
-  }
-}
-</script>
+
 
 
 

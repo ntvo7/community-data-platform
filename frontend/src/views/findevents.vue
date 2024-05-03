@@ -83,6 +83,82 @@
   </main>
 </template>
 
+<script setup>
+import { getEvents, searchEvents } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { ref } from 'vue';
+
+
+const toast = useToast();
+
+const events = ref(null);
+const searchBy = ref(null);
+const name = ref(null);
+const eventDate = ref(null);
+const hoverId = ref(null);
+const isLoading = ref(false);
+
+
+const loadData = async () => {
+
+  searchBy.value = null;
+  name.value = null;
+  eventDate.value = null;
+
+
+  isLoading.value = true;
+
+  try {
+    const response = await getEvents();
+    events.value = response;
+  } catch (error) {
+    toast.error('loadData error', error);
+  }
+};
+
+const handleSubmitForm = async () => {
+
+  if (searchBy.value === 'Event Name') {
+    if (name.value) {
+      try {
+        const query = {
+          searchBy: 'name',
+          name: name.value,
+        };
+        const response = await searchEvents(query);
+        events.value = response;
+      } catch (error) {
+        toast.error('Error searching events', error);
+      }
+    }
+
+  } else if (searchBy.value === 'Event Date') {
+    if (eventDate.value) {
+      try {
+        const formattedDate = new Date(eventDate.value).toISOString().substring(0, 10);
+        const query = {
+          searchBy: 'date',
+          eventDate: formattedDate,
+        };
+        const response = await searchEvents(query);
+        events.value = response;
+      } catch (error) {
+        toast.error('Error searching events:', error);
+      }
+    }
+  }
+};
+
+
+const formatDate = (date) => {
+  const isoDate = new Date(date);
+  const year = isoDate.getUTCFullYear();
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(isoDate.getUTCDate()).padStart(2, '0');
+  return `${month}/${day}/${year}`;
+};
+</script>
+
 <!-- <script>
 import { getClients, searchClients } from '../api/api'
 import { useToast } from 'vue-toastification'
@@ -230,79 +306,3 @@ const handleSubmitForm = async () => {
 };
 
 </script> -->
-
-<script setup>
-import { getEvents, searchEvents } from '../api/api';
-import { useToast } from 'vue-toastification';
-import { ref } from 'vue';
-
-
-const toast = useToast();
-
-const events = ref(null);
-const searchBy = ref(null);
-const name = ref(null);
-const eventDate = ref(null);
-const hoverId = ref(null);
-const isLoading = ref(false);
-
-
-const loadData = async () => {
-
-  searchBy.value = null;
-  name.value = null;
-  eventDate.value = null;
-
-
-  isLoading.value = true;
-
-  try {
-    const response = await getEvents();
-    events.value = response;
-  } catch (error) {
-    toast.error('loadData error', error);
-  }
-};
-
-const handleSubmitForm = async () => {
-
-  if (searchBy.value === 'Event Name') {
-    if (name.value) {
-      try {
-        const query = {
-          searchBy: 'name',
-          name: name.value,
-        };
-        const response = await searchEvents(query);
-        events.value = response;
-      } catch (error) {
-        toast.error('Error searching events', error);
-      }
-    }
-
-  } else if (searchBy.value === 'Event Date') {
-    if (eventDate.value) {
-      try {
-        const formattedDate = new Date(eventDate.value).toISOString().substring(0, 10);
-        const query = {
-          searchBy: 'date',
-          eventDate: formattedDate,
-        };
-        const response = await searchEvents(query);
-        events.value = response;
-      } catch (error) {
-        toast.error('Error searching events:', error);
-      }
-    }
-  }
-};
-
-
-const formatDate = (date) => {
-  const isoDate = new Date(date);
-  const year = isoDate.getUTCFullYear();
-  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(isoDate.getUTCDate()).padStart(2, '0');
-  return `${month}/${day}/${year}`;
-};
-</script>

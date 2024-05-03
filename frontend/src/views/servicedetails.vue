@@ -126,22 +126,22 @@ import { useToast } from 'vue-toastification';
 import { useRouter, useRoute } from 'vue-router';
 
 const service = ref({
-  name: null,
-  description: null,
-  status: null
+  name: '',
+  description: '',
+  status: ''
 });
 const events = ref([]);
 const hoverId = ref(null);
+
 const toast = useToast();
 const router = useRouter();
 const route = useRoute();
 const user = useLoggedInUserStore();
 
-// Validations
 const rules = {
   service: {
-    name: { required },
-  },
+    name: { required }
+  }
 };
 const v$ = useVuelidate(rules, { service });
 
@@ -154,8 +154,8 @@ const formatDate = (date) => {
 };
 
 const submitServiceUpdate = async () => {
-  v$.$validate();
-  if (v$.$error) {
+  v$.value.$touch(); // Trigger validation
+  if (v$.value.$error) {
     toast.error('Please fix input field errors');
     return;
   }
@@ -163,7 +163,7 @@ const submitServiceUpdate = async () => {
   try {
     const response = await updateService(route.params.id, service.value);
     toast.success('Service updated successfully: ' + response);
-    router.push('/findservice');
+    router.push({ name: 'findservice' });
   } catch (error) {
     toast.error('Error updating service: ' + error.message);
   }
@@ -190,7 +190,6 @@ onMounted(async () => {
       getServiceById(route.params.id),
       getEventsByServiceId(route.params.id),
     ]);
-
     service.value = serviceResponse;
     events.value = eventsResponse;
   } catch (error) {
@@ -308,7 +307,6 @@ export default {
   }
 }
 </script> -->
-
 
 
 

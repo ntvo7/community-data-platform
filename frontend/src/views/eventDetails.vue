@@ -194,7 +194,7 @@
   </main>
 </template>
 
-<script>
+<!-- <script>
 //import vuelidate functionalities
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -320,9 +320,9 @@ export default {
     },
   }
 }
-</script>
+</script> -->
 
-<!-- <script setup>
+<script setup>
 import { ref, onMounted } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
@@ -415,6 +415,6 @@ onMounted(async () => {
     toast.error('Error loading data', error);
   }
 });
-</script> -->
+</script>
 
 
