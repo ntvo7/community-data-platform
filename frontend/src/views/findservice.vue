@@ -83,6 +83,61 @@
   </main>
 </template>
 
+<script setup>
+import { ref } from 'vue';
+import { getServices, searchServices } from '../api/api';
+import { useRouter } from 'vue-router';
+import { useToast } from 'vue-toastification';
+
+// Reactive references for data
+const services = ref(null);
+const searchBy = ref('Service Name');
+const name = ref('');
+const description = ref('');
+
+// Router
+const router = useRouter();
+
+// Toast notification setup
+const toast = useToast();
+
+// Function to load data
+const loadData = async () => {
+  try {
+    const response = await getServices();
+    services.value = response;
+  } catch (error) {
+    toast.error(error);
+  }
+};
+
+// Function to handle form submission
+const handleSubmitForm = async () => {
+  let query = {};
+  if (searchBy.value === 'Service Name') {
+    query = { searchBy: 'name', name: name.value };
+  } else if (searchBy.value === 'Service Description') {
+    query = { searchBy: 'description', description: description.value };
+  }
+
+  try {
+    const response = await searchServices(query);
+    services.value = response;
+  } catch (error) {
+    toast.error('Error searching services:', error);
+  }
+};
+
+// Function to clear search
+const clearSearch = () => {
+  searchBy.value = 'Service Name';
+  name.value = '';
+  description.value = '';
+  loadData();
+};
+
+</script>
+
 <!-- <script>
 import { getServices, searchServices } from '../api/api'
 import { useToast } from 'vue-toastification'
@@ -162,113 +217,3 @@ export default {
   },
 }
 </script> -->
-
-<!-- <script setup>
-import { ref } from 'vue';
-import { getServices, searchServices } from '../api/api';
-import { useRouter } from 'vue-router';
-import { useToast } from 'vue-toastification';
-
-// Reactive references for data
-const services = ref(null);
-const searchBy = ref('Service Name');
-const name = ref('');
-const description = ref('');
-
-// Router
-const router = useRouter();
-
-// Toast notification setup
-const toast = useToast();
-
-// Function to load data
-const loadData = async () => {
-  try {
-    const response = await getServices();
-    services.value = response;
-  } catch (error) {
-    toast.error(error);
-  }
-};
-
-// Function to handle form submission
-const handleSubmitForm = async () => {
-  let query = {};
-  if (searchBy.value === 'Service Name') {
-    query = { searchBy: 'name', name: name.value };
-  } else if (searchBy.value === 'Service Description') {
-    query = { searchBy: 'description', description: description.value };
-  }
-
-  try {
-    const response = await searchServices(query);
-    services.value = response;
-  } catch (error) {
-    toast.error('Error searching services:', error);
-  }
-};
-
-// Function to clear search
-const clearSearch = () => {
-  searchBy.value = 'Service Name';
-  name.value = '';
-  description.value = '';
-  loadData();
-};
-
-</script> -->
-
-<script setup>
-import { ref } from 'vue';
-import { getServices, searchServices } from '../api/api';
-import { useRouter } from 'vue-router';
-import { useToast } from 'vue-toastification';
-
-// Reactive references for data
-const services = ref(null);
-const searchBy = ref('Service Name');
-const name = ref('');
-const description = ref('');
-
-// Router
-const router = useRouter();
-
-// Toast notification setup
-const toast = useToast();
-
-// Function to load data
-const loadData = async () => {
-  try {
-    const response = await getServices();
-    services.value = response;
-  } catch (error) {
-    toast.error(error);
-  }
-};
-
-// Function to handle form submission
-const handleSubmitForm = async () => {
-  let query = {};
-  if (searchBy.value === 'Service Name') {
-    query = { searchBy: 'name', name: name.value };
-  } else if (searchBy.value === 'Service Description') {
-    query = { searchBy: 'description', description: description.value };
-  }
-
-  try {
-    const response = await searchServices(query);
-    services.value = response;
-  } catch (error) {
-    toast.error('Error searching services:', error);
-  }
-};
-
-// Function to clear search
-const clearSearch = () => {
-  searchBy.value = 'Service Name';
-  name.value = '';
-  description.value = '';
-  loadData();
-};
-
-</script>

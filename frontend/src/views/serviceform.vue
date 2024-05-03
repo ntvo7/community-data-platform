@@ -76,6 +76,55 @@
     </main>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+import useVuelidate from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { useToast } from 'vue-toastification'
+import { createService } from '../api/api'
+import { useRouter } from 'vue-router'
+
+// Variables to hold the new service information
+const service = ref({
+    name: null,
+    description: null,
+    status: "Active"
+})
+
+// Validations for the service
+const rules = {
+    service: {
+        name: { required }
+    }
+}
+
+// Register Vuelidate
+const v$ = useVuelidate(rules, { service })
+
+// Notifications and routing
+const toast = useToast()
+const router = useRouter()
+
+// Method called when the user attempts to create a new service
+async function handleSubmitForm() {
+    // Trigger validation
+    await v$.value.$validate()
+
+    if (v$.value.$error) {
+        // Form is invalid, do not proceed
+        return
+    }
+
+    try {
+        const response = await createService(service.value)
+        toast.success(response)
+        router.push('/findservice')
+    } catch (error) {
+        toast.error('Error creating new service: ' + error)
+    }
+}
+</script>
+
 <!-- <script>
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
@@ -136,119 +185,4 @@ export default {
     }
 }
 </script> -->
-
-
-
-<!-- <script setup>
-import { ref } from 'vue'
-import useVuelidate from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
-import { useToast } from 'vue-toastification'
-import { createService } from '../api/api'
-import { useRouter } from 'vue-router'
-
-// Variables to hold the new service information
-const service = ref({
-    name: null,
-    description: null,
-    status: "Active"
-})
-
-// Validations for the service
-const rules = {
-    service: {
-        name: { required }
-    }
-}
-
-// Register Vuelidate
-const v$ = useVuelidate(rules, { service })
-
-// Notifications and routing
-const toast = useToast()
-const router = useRouter()
-
-// Method called when the user attempts to create a new service
-async function handleSubmitForm() {
-    // Trigger validation
-    await v$.value.$validate()
-
-    if (v$.value.$error) {
-        // Form is invalid, do not proceed
-        return
-    }
-
-    try {
-        const response = await createService(service.value)
-        toast.success(response)
-        router.push('/findservice')
-    } catch (error) {
-        toast.error('Error creating new service: ' + error)
-    }
-}
-</script> -->
-
-<script>
-import { ref } from 'vue';
-import { useToast } from 'vue-toastification';
-import { useVuelidate } from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
-import { createService } from '../api/api';
-import { useRouter } from 'vue-router';
- 
-export default {
-  setup() {
-    // Reactive references for form fields
-    const service = ref({
-      name: '',
-      description: '',
-      status: 'Active' // Default status
-    });
- 
-    // Toast notification setup
-    const toast = useToast();
- 
-    // Vue Router setup
-    const router = useRouter();
- 
-    // Vuelidate setup
-    const validations = {
-        service: {
-            name: { required },
-            description: { required }
-        }
-    };
-    const v$ = useVuelidate(validations, { service });
-    // Function to handle form submission
-    const handleSubmitForm = async () => {
-      try {
-        // Validate the form
-        v$.value.$touch();
-        if (v$.value.$error) return;
- 
-        // Call the API to create a new service
-        await createService(service.value);
-        // Clear the form after successful submission
-        service.value.name = '';
-        service.value.description = '';
-        // Show success message
-        toast.success('Service created successfully!');
-        // Redirect to findservice.vue
-        router.push({ name: 'findservice' });
-      } catch (error) {
-        // Show error message if API call fails
-        toast.error('Error creating service: ' + error.message);
-      }
-    };
- 
-    // Return variables and functions to be used in the template
-    return {
-      service,
-      v$,
-      handleSubmitForm
-    };
-  }
-};
- 
-</script>
 

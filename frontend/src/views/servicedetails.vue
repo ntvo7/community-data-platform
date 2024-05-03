@@ -116,7 +116,90 @@
   </main>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import useVuelidate from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
+import { useLoggedInUserStore } from "../store/loggedInUser";
+import { getServiceById, getEventsByServiceId, updateService, deleteService } from '../api/api';
+import { useToast } from 'vue-toastification';
+import { useRouter, useRoute } from 'vue-router';
+
+const service = ref({
+  name: null,
+  description: null,
+  status: null
+});
+const events = ref([]);
+const hoverId = ref(null);
+const toast = useToast();
+const router = useRouter();
+const route = useRoute();
+const user = useLoggedInUserStore();
+
+// Validations
+const rules = {
+  service: {
+    name: { required },
+  },
+};
+const v$ = useVuelidate(rules, { service });
+
+const formatDate = (date) => {
+  const isoDate = new Date(date);
+  const year = isoDate.getUTCFullYear();
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(isoDate.getUTCDate()).padStart(2, '0');
+  return `${month}/${day}/${year}`;
+};
+
+const submitServiceUpdate = async () => {
+  v$.$validate();
+  if (v$.$error) {
+    toast.error('Please fix input field errors');
+    return;
+  }
+
+  try {
+    const response = await updateService(route.params.id, service.value);
+    toast.success('Service updated successfully: ' + response);
+    router.push('/findservice');
+  } catch (error) {
+    toast.error('Error updating service: ' + error.message);
+  }
+};
+
+const submitDeleteService = async () => {
+  if (events.value.length !== 0) {
+    toast.info('Service cannot be deleted since it is being used by events.');
+    return;
+  }
+
+  try {
+    const response = await deleteService(route.params.id);
+    toast.success('Service deleted successfully: ' + response);
+    router.push('/findservice');
+  } catch (error) {
+    toast.error('Error deleting service: ' + error.message);
+  }
+};
+
+onMounted(async () => {
+  try {
+    const [serviceResponse, eventsResponse] = await Promise.all([
+      getServiceById(route.params.id),
+      getEventsByServiceId(route.params.id),
+    ]);
+
+    service.value = serviceResponse;
+    events.value = eventsResponse;
+  } catch (error) {
+    toast.error('Error loading data: ' + error.message);
+  }
+});
+</script>
+
+<!-- <script>
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { useLoggedInUserStore } from "../store/loggedInUser";
@@ -224,7 +307,7 @@ export default {
     },
   }
 }
-</script>
+</script> -->
 
 
 
