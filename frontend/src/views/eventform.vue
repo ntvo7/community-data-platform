@@ -154,74 +154,6 @@
   </main>
 </template>
  
-<script setup>
-import { reactive, onMounted } from 'vue'
-import useVuelidate from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
-import { getServices, createEvent } from '../api/api'
-import { useToast } from 'vue-toastification'
-import { useRouter } from 'vue-router'
-
-const toast = useToast()
-const router = useRouter()
-
-const event = reactive({
-  name: null,
-  description: null,
-  date: null,
-  services: [],
-  address: {
-    line1: null,
-    line2: null,
-    city: null,
-    county: null,
-    zip: null
-  },
-  attendees: []
-})
-
-const activeServices = reactive([])
-
-const validations = {
-  event: {
-    name: { required },
-    date: {
-      required,
-      validDate: value => !isNaN(new Date(value)),
-      notBeforeToday: value => value >= new Date().toISOString().split('T')[0]
-    }
-  }
-}
-
-const v$ = useVuelidate(validations, { event })
-
-onMounted(async () => {
-  try {
-    const response = await getServices()
-    activeServices.splice(0, activeServices.length, ...response.filter(item => item.status === 'Active'))
-  } catch (error) {
-    toast.error(error)
-  }
-})
-
-const handleSubmitForm = async () => {
-  v$.value.$validate()
-
-  if (v$.value.$error) {
-    toast.error('Please fix input field errors')
-    return
-  }
-
-  try {
-    const response = await createEvent(event)
-    toast.success(response)
-    router.push('/findevents')
-  } catch (error) {
-    toast.error('Error creating new event:', error)
-  }
-}
-</script>
-
 <!-- <script>
 // import vuelidate validations
 import useVuelidate from '@vuelidate/core'
@@ -318,6 +250,70 @@ export default {
 }
 </script> -->
 
+<script setup>
+import { reactive, onMounted } from 'vue'
+import useVuelidate from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
+import { getServices, createEvent } from '../api/api'
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 
+const toast = useToast()
+const router = useRouter()
 
+const event = reactive({
+  name: null,
+  description: null,
+  date: null,
+  services: [],
+  address: {
+    line1: null,
+    line2: null,
+    city: null,
+    county: null,
+    zip: null
+  },
+  attendees: []
+})
 
+const activeServices = reactive([])
+
+const validations = {
+  event: {
+    name: { required },
+    date: {
+      required,
+      validDate: value => !isNaN(new Date(value)),
+      notBeforeToday: value => value >= new Date().toISOString().split('T')[0]
+    }
+  }
+}
+
+const v$ = useVuelidate(validations, { event })
+
+onMounted(async () => {
+  try {
+    const response = await getServices()
+    activeServices.splice(0, activeServices.length, ...response.filter(item => item.status === 'Active'))
+  } catch (error) {
+    toast.error(error)
+  }
+})
+
+const handleSubmitForm = async () => {
+  v$.value.$validate()
+
+  if (v$.value.$error) {
+    toast.error('Please fix input field errors')
+    return
+  }
+
+  try {
+    const response = await createEvent(event)
+    toast.success(response)
+    router.push('/findevents')
+  } catch (error) {
+    toast.error('Error creating new event:', error)
+  }
+}
+</script>
