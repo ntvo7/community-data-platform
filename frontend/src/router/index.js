@@ -66,6 +66,11 @@ const routes = [
     name: 'servicedetails',
     meta: { requiresAuth: true },
     component: () => import('../views/servicedetails.vue')
+  },
+  {
+    // send unknown URLs to the dashboard instead of showing an empty page
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
   }
 ]
 const router = createRouter({
