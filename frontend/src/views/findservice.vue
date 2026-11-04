@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { getServices, searchServices } from '../api/api';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
@@ -110,6 +110,9 @@ const loadData = async () => {
     toast.error(error);
   }
 };
+
+// when component is mounted, load the data
+onMounted(loadData);
 
 // Function to handle form submission
 const handleSubmitForm = async () => {
