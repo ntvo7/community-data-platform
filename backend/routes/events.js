@@ -150,8 +150,9 @@ router.post("/", authMiddleWare, requireEditor, (req, res, next) => {
 
 // API endpoint to PUT -> update event
 router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
-  // an event's organization cannot be changed through an update
-  const { org: ignoredOrg, ...updates } = req.body;
+  // an event's organization cannot be changed through an update. Attendees only change through
+  // register and deregister, otherwise saving an out-of-date page would undo those changes
+  const { org: ignoredOrg, attendees: ignoredAttendees, ...updates } = req.body;
   events.findOneAndUpdate(
     { _id: req.params.id, org: org },
     updates,
