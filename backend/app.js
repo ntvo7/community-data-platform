@@ -63,8 +63,12 @@ app.listen(PORT, () => {
 
 // error handler
 app.use(function (err, req, res, next) {
-  // logs error and error code to console
-  console.error(err.message, req);
+  // logs error to console. Not the whole request, since its headers contain the user's token
+  console.error(err.message);
+  // missing or invalid values in a request are the caller's mistake, not a server failure
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
+    err.statusCode = 400;
+  }
   if (!err.statusCode) {
     err.statusCode = 500;
   }

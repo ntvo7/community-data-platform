@@ -15,6 +15,13 @@ const MAX_GET_RETRIES = 3;
 const GET_RETRY_DELAY_MS = 1000;
 
 apiClient.interceptors.response.use(undefined, async (error) => {
+  // A saved token the server no longer accepts: clear it and ask the user to log in again
+  if (error.response?.status === 401 && localStorage.getItem("authToken")) {
+    logoutUser();
+    window.location.assign("/login");
+    throw error;
+  }
+
   const config = error.config;
   // Only retry when there is no response. A response means the server made a decision.
   if (!config || error.response || config.method !== "get") throw error;
@@ -30,6 +37,13 @@ apiClient.interceptors.response.use(undefined, async (error) => {
 // If user logs in successfully, this login sets a header to "apiClient" called "Authorization" with the value of "Bearer <token>" This security token is used to validate API calls
 function setAuthHeader(token) {
   apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}
+
+// When the app starts, this function puts a saved token back on apiClient and returns it
+export function restoreAuthToken() {
+  const token = localStorage.getItem("authToken");
+  if (token) setAuthHeader(token);
+  return token;
 }
 
 // When user logs out, this function removes the Authorization header from apiClient

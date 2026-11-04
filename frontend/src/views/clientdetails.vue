@@ -204,7 +204,8 @@
               <td class="p-2 text-right">
                 <span class="remove-btn-wrapper">
                   <span class="remove-btn text-gray-400 cursor-pointer"
-                    @click.stop="removeClientFromEvent(client._id, event._id)" v-if="hoverId === event._id">X</span>
+                    @click.stop="removeClientFromEvent(client._id, event._id)"
+                    v-if="hoverId === event._id && user.role !== 'viewer'">X</span>
                 </span>
               </td>
             </tr>
@@ -379,12 +380,13 @@ export default {
               this.clientEvents = await getClientEvents(this.$route.params.id);
               this.eventsFiltered = await getNonClientEvents(this.$route.params.id);
               this.eventsSelected = [];
+              toast.success(events.length === 1 ? 'Client added to event' : 'Client added to events');
             } catch (error) {
-              toast.error(error);
+              toast.error(error.response?.data || error.message);
             }
           })
           .catch((error) => {
-            toast.error(error);
+            toast.error(error.response?.data || error.message);
           });
       } catch (error) {
         toast.error(error);

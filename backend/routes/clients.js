@@ -6,6 +6,9 @@ const router = express.Router();
 
 // Middleware for authorization. For API calls that require authorization, this middleware checks if the header of API calls have a valid security token. If no security token or invalid security token, then the API call is not made.
 const authMiddleWare = require('../auth/authMiddleWare');
+// Middleware that only lets editors make API calls that change data
+const requireEditor = require('../auth/requireEditor');
+const escapeRegex = require('../utils/escapeRegex');
 
 // importing data model schemas
 const { clients, events } = require('../models/models');
@@ -48,14 +51,14 @@ router.get('/search', authMiddleWare, (req, res, next) => {
     case "name":
       if (req.query.firstName) {
         const firstNameRegex = new RegExp(
-          `.*${req.query.firstName}.*`,
+          `.*${escapeRegex(req.query.firstName)}.*`,
           regexOptions
         );
         queryArray.push({ firstName: { $regex: firstNameRegex } });
       }
       if (req.query.lastName) {
         const lastNameRegex = new RegExp(
-          `.*${req.query.lastName}.*`,
+          `.*${escapeRegex(req.query.lastName)}.*`,
           regexOptions
         );
         queryArray.push({ lastName: { $regex: lastNameRegex } });
@@ -64,7 +67,7 @@ router.get('/search', authMiddleWare, (req, res, next) => {
     case "number":
       if (req.query.phoneNumber) {
         const phoneNumberRegex = new RegExp(
-          `.*${req.query.phoneNumber}.*`,
+          `.*${escapeRegex(req.query.phoneNumber)}.*`,
           regexOptions
         );
         queryArray.push({
@@ -76,7 +79,10 @@ router.get('/search', authMiddleWare, (req, res, next) => {
       return res.status(400).send("invalid searchBy");
   }
 
-  dbQuery["$and"] = queryArray;
+  // an empty $and is an error in MongoDB, so only add it when there is something to match
+  if (queryArray.length) {
+    dbQuery["$and"] = queryArray;
+  }
   clients.find(dbQuery, (error, data) => {
     if (error) {
       return next(error);
@@ -87,7 +93,7 @@ router.get('/search', authMiddleWare, (req, res, next) => {
 });
 
 // POST create new client
-router.post('/', authMiddleWare, (req, res, next) => {
+router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
   const newClient = req.body;
   newClient.orgs = [org];
   clients.create(newClient, (error, data) => {
@@ -100,7 +106,7 @@ router.post('/', authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to PUT update client
-router.put("/update/:id", authMiddleWare, (req, res, next) => {
+router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
   clients.findByIdAndUpdate(req.params.id, req.body, (error, data) => {
     if (error) {
       return next(error);
@@ -114,7 +120,7 @@ router.put("/update/:id", authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to hard delete client by ID, can be only be done if client is not signed up for events
-router.delete("/:id", authMiddleWare, (req, res, next) => {
+router.delete("/:id", authMiddleWare, requireEditor, (req, res, next) => {
   clients.findOne({ _id : req.params.id, orgs: org }, (error, data) => {
     if (error) {
       return next(error);

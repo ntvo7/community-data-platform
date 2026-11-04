@@ -27,6 +27,7 @@
                 @click="editEvent(event._id)"
                 v-for="event in recentEvents"
                 :key="event._id"
+                class="cursor-pointer"
               >
                 <td class="p-2 text-left">{{ event.name }}</td>
                 <td class="p-2 text-left">{{ formatDate(event.date) }}</td>
@@ -237,9 +238,15 @@ export default {
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import AttendanceChart from '../components/barChart.vue';
 import ZipChart from '../components/donutZipChart.vue';
 import { getAttendance, getClientsByZipCode } from '../api/api';
+
+const router = useRouter();
+
+// Open an event's details page when its row is clicked
+const editEvent = (id) => router.push({ name: 'eventdetails', params: { id } });
 
 // Define reactive variables
 const recentEvents = ref([]);

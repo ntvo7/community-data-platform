@@ -15,10 +15,15 @@ const org = process.env.ORG_ID;
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
+  // same message for every failure, so the response does not reveal which usernames exist
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ message: 'Invalid username or password' });
+  }
+
   try {
     const user = await users.findOne({ username: username, org: org });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid username' });
+      return res.status(400).json({ message: 'Invalid username or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

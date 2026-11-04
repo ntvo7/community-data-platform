@@ -6,6 +6,9 @@ const org = process.env.ORG_ID;
 
 // Middleware for authorization. For API calls that require authorization, this middleware checks if the header of API calls have a valid security token. If no security token or invalid security token, then the API call is not made.
 const authMiddleWare = require("../auth/authMiddleWare");
+// Middleware that only lets editors make API calls that change data
+const requireEditor = require("../auth/requireEditor");
+const escapeRegex = require("../utils/escapeRegex");
 
 // importing data model schemas
 const { events, clients } = require("../models/models");
@@ -43,11 +46,18 @@ router.get("/search/", authMiddleWare, (req, res, next) => {
   const dbQuery = { org: org };
   switch (req.query.searchBy) {
     case "name":
-      dbQuery.name = { $regex: `${req.query.name}`, $options: "i" };
+      dbQuery.name = { $regex: escapeRegex(req.query.name), $options: "i" };
       break;
-    case "date":
-      dbQuery.date = req.query.eventDate;
+    case "date": {
+      // match the whole day, since stored dates can include a time. Dates are displayed in UTC.
+      const dayStart = new Date(`${req.query.eventDate}T00:00:00.000Z`);
+      if (isNaN(dayStart)) {
+        return res.status(400).send("invalid eventDate");
+      }
+      const nextDay = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      dbQuery.date = { $gte: dayStart, $lt: nextDay };
       break;
+    }
     default:
       return res.status(400).send("invalid searchBy");
   }
@@ -126,7 +136,7 @@ router.get("/service/:id", authMiddleWare, async (req, res, next) => {
 });
 
 // API endpoint to POST new event
-router.post("/", authMiddleWare, (req, res, next) => {
+router.post("/", authMiddleWare, requireEditor, (req, res, next) => {
   const newEvent = req.body;
   newEvent.org = org;
   events.create(newEvent, (error, data) => {
@@ -139,7 +149,7 @@ router.post("/", authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to PUT -> update event
-router.put("/update/:id", authMiddleWare, (req, res, next) => {
+router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
   events.findOneAndUpdate(
     { _id: req.params.id, org: org },
     req.body,
@@ -154,42 +164,44 @@ router.put("/update/:id", authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to PUT -> add attendee to event
-router.put("/register", authMiddleWare, (req, res, next) => {
-  events.find(
-    { _id: req.query.event, attendees: req.query.client, org: org },
-    (error, data) => {
-      if (error) {
-        return next(error);
-      } else {
-        // only add attendee if not yet signed up
-        if (!data.length) {
-          events.findByIdAndUpdate(
-            req.query.event,
-            { $push: { attendees: req.query.client } },
-            (error, data) => {
-              if (error) {
-                return next(error);
-              } else {
-                res.status(200).send("Client added to event");
-              }
-            }
-          );
-        } else {
-          res.status(400).send("Client already added to event");
-        }
-      }
+router.put("/register", authMiddleWare, requireEditor, async (req, res, next) => {
+  const { event: eventId, client: clientId } = req.query;
+  if (typeof eventId !== "string" || typeof clientId !== "string") {
+    return res.status(400).send("event and client are required");
+  }
+
+  try {
+    // both the event and the client have to exist in this org
+    const event = await events.findOne({ _id: eventId, org: org });
+    if (!event) {
+      return res.status(400).send("Event not found");
     }
-  );
+    const client = await clients.findOne({ _id: clientId, orgs: org });
+    if (!client) {
+      return res.status(400).send("Client not found");
+    }
+
+    // only add attendee if not yet signed up
+    if (event.attendees.some((attendee) => attendee.toString() === clientId)) {
+      return res.status(400).send("Client already added to event");
+    }
+    await events.updateOne({ _id: eventId }, { $push: { attendees: clientId } });
+    res.status(200).send("Client added to event");
+  } catch (error) {
+    next(error);
+  }
 });
 
 // API endpoint to PUT -> remove attendee from event
-router.put("/deregister", authMiddleWare, (req, res, next) => {
+router.put("/deregister", authMiddleWare, requireEditor, (req, res, next) => {
   events.findByIdAndUpdate(
     req.query.event,
     { $pull: { attendees: req.query.client } },
     (error, data) => {
       if (error) {
         return next(error);
+      } else if (!data) {
+        res.status(400).send("Event not found");
       } else {
         clients.findByIdAndUpdate(
           req.query.client,
@@ -208,7 +220,7 @@ router.put("/deregister", authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to hard DELETE event by ID
-router.delete("/:id", authMiddleWare, (req, res, next) => {
+router.delete("/:id", authMiddleWare, requireEditor, (req, res, next) => {
   events.findOne({ _id: req.params.id, org: org }, (error, data) => {
     if (error) {
       return next(error);

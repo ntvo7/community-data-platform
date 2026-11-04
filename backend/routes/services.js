@@ -7,6 +7,9 @@ const { services, events } = require('../models/models');
 
 // Middleware for authorization. For API calls that require authorization, this middleware checks if the header of API calls have a valid security token. If no security token or invalid security token, then the API call is not made.
 const authMiddleWare = require('../auth/authMiddleWare');
+// Middleware that only lets editors make API calls that change data
+const requireEditor = require('../auth/requireEditor');
+const escapeRegex = require('../utils/escapeRegex');
 
 // org id from environment
 const org = process.env.ORG_ID;
@@ -42,11 +45,11 @@ router.get('/search', authMiddleWare, (req, res, next) => {
   const dbQuery = { org: org };
   switch (req.query.searchBy) {
     case 'name':
-      dbQuery.name = { $regex: `${req.query.name}`, $options: "i" };
+      dbQuery.name = { $regex: escapeRegex(req.query.name), $options: "i" };
       break;
     case 'description':
       dbQuery.description = {
-        $regex: `${req.query.description}`,
+        $regex: escapeRegex(req.query.description),
         $options: "i",
       };
       break;
@@ -63,7 +66,7 @@ router.get('/search', authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to POST new service
-router.post('/', authMiddleWare, (req, res, next) => {
+router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
   const newService = req.body;
   newService.org = [org];
   services.create(newService, (error, data) => {
@@ -76,7 +79,7 @@ router.post('/', authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to PUT -> update service
-router.put('/update/:id', authMiddleWare, (req, res, next) => {
+router.put('/update/:id', authMiddleWare, requireEditor, (req, res, next) => {
   services.findByIdAndUpdate(req.params.id, req.body, (error, data) => {
     if (error) {
       return next(error);
@@ -90,9 +93,15 @@ router.put('/update/:id', authMiddleWare, (req, res, next) => {
 });
 
 // API endpoint to hard DELETE event by ID
-router.delete('/:id', authMiddleWare, async (req, res, next) => {
+router.delete('/:id', authMiddleWare, requireEditor, async (req, res, next) => {
   // only delete service if no events are using that service
-  const serviceEvents = await events.find({ services: req.params.id, org: org })
+  let serviceEvents;
+  try {
+    serviceEvents = await events.find({ services: req.params.id, org: org });
+  } catch (error) {
+    // without this, a malformed ID is an unhandled rejection that stops the server
+    return next(error);
+  }
 
   if (serviceEvents.length !== 0) {
     res

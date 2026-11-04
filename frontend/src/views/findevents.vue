@@ -74,7 +74,7 @@
               @mouseleave="hoverId = null">
               <td class="p-2 text-left">{{ event.name }}</td>
               <td class="p-2 text-left">{{ formatDate(event.date) }}</td>
-              <td class="p-2 text-left">{{ event.address.line1 }}</td>
+              <td class="p-2 text-left">{{ event.address?.line1 }}</td>
             </tr>
           </tbody>
         </table>
@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { getClients, searchClients } from '../api/api'
+import { getEvents, searchEvents } from '../api/api'
 import { useToast } from 'vue-toastification'
 
 
@@ -95,13 +95,12 @@ const toast = useToast()
 export default {
   data() {
     return {
-      //variable to store all clients and their information for the organization
-      clients: null,
+      //variable to store all events and their information for the organization
+      events: [],
       // Parameters for search to occur
       searchBy: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
+      name: '',
+      eventDate: '',
       // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
       hoverId: null,
     }
@@ -111,58 +110,46 @@ export default {
     this.loadData()
   },
   methods: {
+    // method to format the event date
+    formatDate(date) {
+      const isoDate = new Date(date);
+      const year = isoDate.getUTCFullYear();
+      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(isoDate.getUTCDate()).padStart(2, '0');
+      return `${month}/${day}/${year}`;
+    },
     // method called when component is mounted
     async loadData() {
       // Resets all the variables
       this.searchBy = ''
-      this.firstName = ''
-      this.lastName = ''
-      this.phoneNumber = ''
+      this.name = ''
+      this.eventDate = ''
 
-
-      // get list of clients
+      // get list of events
       try {
-        const response = await getClients();
-        this.clients = response;
+        this.events = await getEvents();
       } catch (error) {
-        toast.error(error)
+        toast.error(error.response?.data || error.message)
       }
     },
-    // method called when user searches for clients
+    // method called when user searches for events
     async handleSubmitForm() {
-      // if user searched by client name
-      if (this.searchBy === 'Client Name') {
-        if (this.firstName || this.lastName) {
-          try {
-            const query = {
-              searchBy: 'name',
-              firstName: this.firstName,
-              lastName: this.lastName,
-            }
-            const response = await searchClients(query)
-            this.clients = response;
-          } catch (error) {
-            toast.error(error)
-          }
-        }
-        // if user searches by client phone number
-      } else if (this.searchBy === 'Client Number') {
-        if (this.phoneNumber) {
-          try {
-            const query = {
-              searchBy: 'number',
-              phoneNumber: this.phoneNumber
-            }
-            const response = await searchClients(query)
-            this.clients = response;
-          } catch (error) {
-            toast.error(error)
-          }
-        }
+      let query = null
+      // if user searched by event name
+      if (this.searchBy === 'Event Name' && this.name) {
+        query = { searchBy: 'name', name: this.name }
+        // if user searched by event date
+      } else if (this.searchBy === 'Event Date' && this.eventDate) {
+        query = { searchBy: 'date', eventDate: this.eventDate }
+      }
+      if (!query) return
+
+      try {
+        this.events = await searchEvents(query)
+      } catch (error) {
+        toast.error(error.response?.data || error.message)
       }
     },
   },
 }
 </script>
-
-
