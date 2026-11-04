@@ -107,7 +107,7 @@
               @mouseleave="hoverId = null">
               <td class="p-2 text-left">{{ event.name }}</td>
               <td class="p-2 text-left">{{ formatDate(event.date) }}</td>
-              <td class="p-2 text-left">{{ event.address.line1 }}</td>
+              <td class="p-2 text-left">{{ event.address?.line1 }}</td>
             </tr>
           </tbody>
         </table>

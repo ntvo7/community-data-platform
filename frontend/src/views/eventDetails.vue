@@ -268,6 +268,8 @@ export default {
 
 
       eventResponse.date = new Date(eventResponse.date).toISOString().substring(0, 10);
+      // address is optional, and the form fields below need the object to exist
+      eventResponse.address = eventResponse.address || {};
 
 
       this.event = eventResponse;
