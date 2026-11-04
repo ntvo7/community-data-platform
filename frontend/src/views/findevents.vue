@@ -129,7 +129,7 @@ export default {
       try {
         this.events = await getEvents();
       } catch (error) {
-        toast.error(error.response?.data || error.message)
+        toast.error(error)
       }
     },
     // method called when user searches for events
@@ -147,7 +147,7 @@ export default {
       try {
         this.events = await searchEvents(query)
       } catch (error) {
-        toast.error(error.response?.data || error.message)
+        toast.error(error)
       }
     },
   },

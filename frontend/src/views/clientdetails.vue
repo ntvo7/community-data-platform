@@ -334,7 +334,7 @@ export default {
 
 
     } catch (error) {
-      toast.error('error loading data:', error)
+      toast.error(error)
     }
   },
   methods: {
@@ -392,11 +392,11 @@ export default {
               this.eventsSelected = [];
               toast.success(events.length === 1 ? 'Client added to event' : 'Client added to events');
             } catch (error) {
-              toast.error(error.response?.data || error.message);
+              toast.error(error);
             }
           })
           .catch((error) => {
-            toast.error(error.response?.data || error.message);
+            toast.error(error);
           });
       } catch (error) {
         toast.error(error);

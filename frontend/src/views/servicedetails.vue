@@ -202,7 +202,7 @@ export default {
         this.$router.push('/findservice')
         toast.success(response)
       } catch (error) {
-        toast.error('error updating service', error)
+        toast.error(error)
       }
     },
 

@@ -105,7 +105,7 @@ export default {
       try {
         orgName.value = await getOrgName();
       } catch (error) {
-        toast.error('Failed to fetch organization name', error)
+        toast.error('Failed to fetch organization name')
       }
     };
 

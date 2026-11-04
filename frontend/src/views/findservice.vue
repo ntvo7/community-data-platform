@@ -155,7 +155,7 @@ export default {
             const response = await searchServices(query)
             this.services = response;
           } catch (error) {
-            toast.error('Error searching services:', error)
+            toast.error(error)
           }
         }
       }

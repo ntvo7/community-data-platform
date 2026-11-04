@@ -51,18 +51,13 @@ function removeAuthHeader() {
   delete apiClient.defaults.headers.common["Authorization"];
 }
 
-// parsing out error messages from API calls see https://stackoverflow.com/questions/67089014/how-to-read-error-messages-from-javascript-error-object
-function getErrorMessageFromResponseBody(string) {
-  let errorString = string;
-
-  try {
-    let json = JSON.parse(string);
-    if (json.errors) {
-      errorString = json.errors[0].msg;
-    }
-  } catch (parseOrAccessError) {}
-
-  return errorString;
+// Gets a message to show the user from a failed API call. The backend sends errors as text or
+// as { message }, and when the server cannot be reached there is no response at all.
+function getErrorMessage(error) {
+  const data = error.response?.data;
+  if (typeof data === "string" && data) return data;
+  if (data?.message) return data.message;
+  return error.response ? error.message : "Unable to reach the server. Please try again.";
 }
 
 // API call to log the user in
@@ -77,12 +72,7 @@ export async function loginUser(username, password) {
     setAuthHeader(token);
     return token;
   } catch (error) {
-    if (error.response.status === 400) {
-      let errorString = getErrorMessageFromResponseBody(
-        error.response.data.message
-      );
-      throw new Error(errorString); // API errors get thrown here
-    } else throw error;
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -106,7 +96,7 @@ export const getEvents = async () => {
     const response = await apiClient.get("/events/");
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -116,7 +106,7 @@ export const getEventById = async (id) => {
     const response = await apiClient.get(`/events/id/${id}`);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -136,7 +126,7 @@ export const searchEvents = async (query) => {
     });
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -146,7 +136,7 @@ export const getClientEvents = async (id) => {
     const response = await apiClient.get(`/events/client/${id}`);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -156,7 +146,7 @@ export const getNonClientEvents = async (id) => {
     const response = await apiClient.get(`/events/client/${id}/not-registered`);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -166,7 +156,7 @@ export const getEventAttendees = async (id) => {
     const response = await apiClient.get(`/events/attendees/${id}`);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -176,7 +166,7 @@ export const getEventsByServiceId = async (id) => {
     const response = await apiClient.get(`/events/service/${id}`);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -186,7 +176,7 @@ export const createEvent = async (eventData) => {
     const response = await apiClient.post("/events/", eventData);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -196,7 +186,7 @@ export const updateEvent = async (id, eventData) => {
     const response = await apiClient.put(`/events/update/${id}`, eventData);
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -215,7 +205,7 @@ export const registerAttendee = async (eventId, clientId) => {
     );
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -234,7 +224,7 @@ export const deregisterAttendee = async (eventId, clientId) => {
     );
     return response.data;
   } catch (error) {
-    throw error;
+    throw getErrorMessage(error);
   }
 };
 
@@ -244,7 +234,7 @@ export const deleteEvent = async (id) => {
     const response = await apiClient.delete(`/events/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -265,7 +255,7 @@ export const getClients = async () => {
     const response = await apiClient.get("clients");
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -275,7 +265,7 @@ export const getClientById = async (id) => {
     const response = await apiClient.get(`/clients/id/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -296,7 +286,7 @@ export const searchClients = async (query) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -306,7 +296,7 @@ export const createClient = async (newClient) => {
     const response = await apiClient.post("/clients", newClient);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -319,7 +309,7 @@ export const updateClient = async (id, updatedClient) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -329,7 +319,7 @@ export const deleteClientbyId = async (id) => {
     const response = await apiClient.delete(`/clients/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -350,7 +340,7 @@ export const getServices = async () => {
     const response = await apiClient.get("/services/");
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -360,7 +350,7 @@ export const getServiceById = async (id) => {
     const response = await apiClient.get(`/services/id/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -379,7 +369,7 @@ export const searchServices = async (query) => {
     });
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -389,7 +379,7 @@ export const createService = async (newService) => {
     const response = await apiClient.post("/services", newService);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -402,7 +392,7 @@ export const updateService = async (id, updatedService) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };
 
@@ -412,6 +402,6 @@ export const deleteService = async (id) => {
     const response = await apiClient.delete(`/services/${id}`);
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw getErrorMessage(error);
   }
 };

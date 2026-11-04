@@ -252,7 +252,7 @@ export default {
         this.$router.push('/findevents')
         toast.success(response)
       } catch (error) {
-        toast.error('error creating new event:', error)
+        toast.error(error)
       }
     },
   },
