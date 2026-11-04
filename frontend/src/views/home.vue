@@ -13,7 +13,7 @@
               Events Attendance
           </h1>
       
-          <div v-if="!recentEvents.length" class="flex justify-center mt-10">No events found.</div>
+          <div v-if="!loading && !error && !recentEvents.length" class="flex justify-center mt-10">No events found.</div>
           <table v-if="recentEvents.length" class="min-w-full shadow-md rounded">
             <thead class="bg-gray-50 text-xl">
               <tr class="p-4 text-left">
@@ -35,7 +35,7 @@
             </tbody>
           </table>
           
-          <div v-if="recentEvents.length">
+          <div v-if="recentEvents.length || loading || error">
             <AttendanceChart
               v-if="!loading && !error"
               :label="labels"
@@ -72,7 +72,7 @@
               Clients by Zip Code
           </h1>
           
-          <div v-if="!zips.length" class="flex justify-center mt-10">No clients found.</div>
+          <div v-if="!zipLoading && !zipError && !zips.length" class="flex justify-center mt-10">No clients found.</div>
           <table v-if="zips.length" class="min-w-full shadow-md rounded">
             <thead class="bg-gray-50 text-xl">
               <tr class="p-4 text-left">
@@ -90,7 +90,7 @@
               </tr>
             </tbody>
           </table>
-          <div v-if="zips.length" class="flex justify-center mt-10">
+          <div v-if="zips.length || zipLoading || zipError" class="flex justify-center mt-10">
             <ZipChart
               v-if="!zipLoading && !zipError"
               :label="zipLabels"
@@ -248,9 +248,10 @@ const labels = ref([]);
 const chartData = ref([]);
 const zipLabels = ref([]);
 const zipChartData = ref([]);
-const loading = ref(false);
+// start in the loading state so the first render does not claim there is no data
+const loading = ref(true);
 const error = ref(null);
-const zipLoading = ref(false);
+const zipLoading = ref(true);
 const zipError = ref(null);
 
 // Method to format the event date

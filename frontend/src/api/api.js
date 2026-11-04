@@ -10,6 +10,22 @@ const apiClient = axios.create({
   },
 });
 
+// Retry GET requests that got no response, e.g. while the backend is still starting up
+const MAX_GET_RETRIES = 3;
+const GET_RETRY_DELAY_MS = 1000;
+
+apiClient.interceptors.response.use(undefined, async (error) => {
+  const config = error.config;
+  // Only retry when there is no response. A response means the server made a decision.
+  if (!config || error.response || config.method !== "get") throw error;
+
+  config.retryCount = (config.retryCount || 0) + 1;
+  if (config.retryCount > MAX_GET_RETRIES) throw error;
+
+  await new Promise((resolve) => setTimeout(resolve, GET_RETRY_DELAY_MS));
+  return apiClient(config);
+});
+
 // Login related API calls
 // If user logs in successfully, this login sets a header to "apiClient" called "Authorization" with the value of "Bearer <token>" This security token is used to validate API calls
 function setAuthHeader(token) {
@@ -309,7 +325,7 @@ export const getClientsByZipCode = async () => {
     const response = await apiClient.get("/clients/byzip");
     return response.data;
   } catch (error) {
-    throw error.response.data;
+    throw error;
   }
 };
 

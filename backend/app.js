@@ -39,6 +39,17 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(morgan('dev'));
 
+// root endpoint so opening the API base URL returns a status instead of a 404
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// browsers request this automatically when opening the API base URL
+app.get('/favicon.ico', (req, res) => res.sendStatus(204));
+
 // setup middle ware for routes
 app.use('/clients', require('./routes/clients'));
 app.use('/events', require('./routes/events'));
