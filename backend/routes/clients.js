@@ -160,7 +160,7 @@ router.get('/byzip', (req, res, next) => {
         $match: {
           // aggregate does not convert types the way find does, so this has to be an ObjectId
           orgs: new ObjectId(org),
-          "address.zip": { $exists: true, $ne: "" }
+          "address.zip": { $nin: ["", null] }
         }
       },
       {
