@@ -100,7 +100,7 @@ router.get(
 
 // API endpoint to GET attendee details for an event
 router.get("/attendees/:id", authMiddleWare, (req, res, next) => {
-  events.findById(req.params.id, (error, event) => {
+  events.findOne({ _id: req.params.id, org: org }, (error, event) => {
     if (error) {
       return next(error);
     } else {
@@ -110,7 +110,7 @@ router.get("/attendees/:id", authMiddleWare, (req, res, next) => {
         const attendeeIds = event.attendees.map((attendee) =>
           attendee.toString()
         );
-        clients.find({ _id: { $in: attendeeIds } }, (error, clients) => {
+        clients.find({ _id: { $in: attendeeIds }, orgs: org }, (error, clients) => {
           if (error) {
             return next(error);
           } else {
@@ -150,12 +150,16 @@ router.post("/", authMiddleWare, requireEditor, (req, res, next) => {
 
 // API endpoint to PUT -> update event
 router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
+  // an event's organization cannot be changed through an update
+  const { org: ignoredOrg, ...updates } = req.body;
   events.findOneAndUpdate(
     { _id: req.params.id, org: org },
-    req.body,
+    updates,
     (error, data) => {
       if (error) {
         return next(error);
+      } else if (!data) {
+        res.status(400).send("Event not found");
       } else {
         res.status(200).send("Event updated successfully");
       }
@@ -194,8 +198,8 @@ router.put("/register", authMiddleWare, requireEditor, async (req, res, next) =>
 
 // API endpoint to PUT -> remove attendee from event
 router.put("/deregister", authMiddleWare, requireEditor, (req, res, next) => {
-  events.findByIdAndUpdate(
-    req.query.event,
+  events.findOneAndUpdate(
+    { _id: req.query.event, org: org },
     { $pull: { attendees: req.query.client } },
     (error, data) => {
       if (error) {
@@ -203,8 +207,8 @@ router.put("/deregister", authMiddleWare, requireEditor, (req, res, next) => {
       } else if (!data) {
         res.status(400).send("Event not found");
       } else {
-        clients.findByIdAndUpdate(
-          req.query.client,
+        clients.findOneAndUpdate(
+          { _id: req.query.client, orgs: org },
           { $pull: { events: req.query.event } },
           (error, data) => {
             if (error) {

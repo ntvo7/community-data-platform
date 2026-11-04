@@ -20,7 +20,7 @@ const org = process.env.ORG_ID;
 // API Endpoint to Get all clients
 router.get('/', authMiddleWare, async (req, res) => {
   try {
-    const cli = await clients.find({});
+    const cli = await clients.find({ orgs: org });
     res.json(cli);
   } catch (err) {
     res.status(500).send(err.message);
@@ -107,7 +107,9 @@ router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
 
 // API endpoint to PUT update client
 router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
-  clients.findByIdAndUpdate(req.params.id, req.body, (error, data) => {
+  // a client's organizations cannot be changed through an update
+  const { orgs, ...updates } = req.body;
+  clients.findOneAndUpdate({ _id: req.params.id, orgs: org }, updates, (error, data) => {
     if (error) {
       return next(error);
     } else {
@@ -156,6 +158,8 @@ router.get('/byzip', (req, res, next) => {
     [
       {
         $match: {
+          // aggregate does not convert types the way find does, so this has to be an ObjectId
+          orgs: new ObjectId(org),
           "address.zip": { $exists: true, $ne: "" }
         }
       },

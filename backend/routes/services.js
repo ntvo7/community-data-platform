@@ -80,7 +80,9 @@ router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
 
 // API endpoint to PUT -> update service
 router.put('/update/:id', authMiddleWare, requireEditor, (req, res, next) => {
-  services.findByIdAndUpdate(req.params.id, req.body, (error, data) => {
+  // a service's organization cannot be changed through an update
+  const { org: ignoredOrg, ...updates } = req.body;
+  services.findOneAndUpdate({ _id: req.params.id, org: org }, updates, (error, data) => {
     if (error) {
       return next(error);
     } else {
