@@ -205,7 +205,10 @@ export default {
 
     // prevents form submission if new event has a date before the current date
     const notBeforeToday = (value) => {
-      const today = new Date()
+      // compare with today's date where the user is. toISOString alone gives the UTC date,
+      // which is already tomorrow during the evening in US time zones
+      const now = new Date()
+      const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
       return value >= today.toISOString().split('T')[0]
     }
 
