@@ -155,6 +155,7 @@ router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
   events.findOneAndUpdate(
     { _id: req.params.id, org: org },
     updates,
+    { runValidators: true },
     (error, data) => {
       if (error) {
         return next(error);

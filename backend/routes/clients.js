@@ -109,7 +109,7 @@ router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
 router.put("/update/:id", authMiddleWare, requireEditor, (req, res, next) => {
   // a client's organizations cannot be changed through an update
   const { orgs, ...updates } = req.body;
-  clients.findOneAndUpdate({ _id: req.params.id, orgs: org }, updates, (error, data) => {
+  clients.findOneAndUpdate({ _id: req.params.id, orgs: org }, updates, { runValidators: true }, (error, data) => {
     if (error) {
       return next(error);
     } else {

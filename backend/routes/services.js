@@ -82,7 +82,7 @@ router.post('/', authMiddleWare, requireEditor, (req, res, next) => {
 router.put('/update/:id', authMiddleWare, requireEditor, (req, res, next) => {
   // a service's organization cannot be changed through an update
   const { org: ignoredOrg, ...updates } = req.body;
-  services.findOneAndUpdate({ _id: req.params.id, org: org }, updates, (error, data) => {
+  services.findOneAndUpdate({ _id: req.params.id, org: org }, updates, { runValidators: true }, (error, data) => {
     if (error) {
       return next(error);
     } else {
