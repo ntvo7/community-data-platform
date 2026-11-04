@@ -92,6 +92,10 @@
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               pattern="[0-9]{3}[0-9]{3}[0-9]{4}" v-model="client.phoneNumber.alternate" />
           </label>
+          <!-- Validation error message -->
+          <span v-if="v$.client.phoneNumber.alternate.$error" class="text-red-500">
+            Alternative Phone Number must be exactly 10 digits
+          </span>
         </div>
       </div>
 
@@ -296,6 +300,12 @@ export default {
         phoneNumber: {
           primary: {
             required,
+            numeric,
+            minLength: minLength(10),
+            maxLength: maxLength(10),
+          },
+          // optional, but has to be a valid number when entered
+          alternate: {
             numeric,
             minLength: minLength(10),
             maxLength: maxLength(10),
