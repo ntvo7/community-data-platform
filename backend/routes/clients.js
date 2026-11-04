@@ -12,7 +12,7 @@ const escapeRegex = require('../utils/escapeRegex');
 
 // importing data model schemas
 const { clients, events } = require('../models/models');
-const { ObjectId } = require('mongodb');
+const { ObjectId } = require('mongoose').Types;
 
 // reading the org id from the environment variable
 const org = process.env.ORG_ID;
