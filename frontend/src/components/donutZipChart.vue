@@ -17,8 +17,8 @@ export default {
       type: Array
     }
   },
-  async mounted() { //uses the data to load the chart's values
-    await new Chart(this.$refs.zipChart, {
+  mounted() { //uses the data to load the chart's values
+    this.chart = new Chart(this.$refs.zipChart, {
       type: 'doughnut',
       data: {
         labels: this.label,
@@ -43,6 +43,10 @@ export default {
         maintainAspectRatio: true
       }
     })
+  },
+  beforeUnmount() {
+    // charts stay in memory until they are destroyed
+    this.chart.destroy()
   },
 }
 </script>

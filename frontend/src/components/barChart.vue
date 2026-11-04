@@ -20,8 +20,8 @@ export default {
       type: Array
     }
   },
-  async mounted() {
-    await new Chart(this.$refs.attendanceChart, {
+  mounted() {
+    this.chart = new Chart(this.$refs.attendanceChart, {
       type: 'bar',
       data: {
         labels: this.label,
@@ -40,7 +40,7 @@ export default {
             }
           },
           x: {
-            gridLines: {
+            grid: {
               display: false
             }
           }
@@ -58,6 +58,10 @@ export default {
         maintainAspectRatio: true
       }
     })
+  },
+  beforeUnmount() {
+    // charts stay in memory until they are destroyed
+    this.chart.destroy()
   }
 }
 </script>
