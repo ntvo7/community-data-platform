@@ -1,0 +1,40 @@
+# Render Blueprint: deploys the backend API and the frontend site together.
+# In Render: New > Blueprint > pick this repo. Render reads this file.
+services:
+  # Backend: Node/Express API
+  - type: web
+    name: community-data-platform-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node app.js
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # MongoDB Atlas connection string (paste it in Render when asked)
+      - key: MONGO_URL
+        sync: false
+      # Same value as ORG_ID in backend/.env
+      - key: ORG_ID
+        sync: false
+      # Render creates a random secret for signing login tokens
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Frontend: Vue site built with Vite
+  - type: web
+    name: community-data-platform
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    # Send every URL to index.html so Vue Router can handle pages like /findclient
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # The backend's URL, e.g. https://community-data-platform-api.onrender.com
+      - key: VITE_ROOT_API
+        sync: false
