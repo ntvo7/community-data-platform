@@ -95,84 +95,64 @@
   </main>
 </template>
 
-<script>
-import { getClients, searchClients } from '../api/api'
-import { useToast } from 'vue-toastification'
+<script setup>
+import { ref, onMounted } from 'vue';
+import { getClients, searchClients } from '../api/api';
+import { useToast } from 'vue-toastification';
 
+const clients = ref(null);
+const searchBy = ref('');
+const firstName = ref('');
+const lastName = ref('');
+const phoneNumber = ref('');
+const hoverId = ref(null);
 
-//Notifications
-const toast = useToast()
+const toast = useToast();
 
+const loadData = async () => {
+  searchBy.value = '';
+  firstName.value = '';
+  lastName.value = '';
+  phoneNumber.value = '';
 
-export default {
-  data() {
-    return {
-      //variable to store all clients and their information for the organization
-      clients: null,
-      // Parameters for search to occur
-      searchBy: '',
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
-      hoverId: null,
-    }
-  },
-  mounted() {
-    // when component is mounted, load the data -
-    this.loadData()
-  },
-  methods: {
-    // method called when component is mounted
-    async loadData() {
-      // Resets all the variables
-      this.searchBy = ''
-      this.firstName = ''
-      this.lastName = ''
-      this.phoneNumber = ''
+  try {
+    const response = await getClients();
+    clients.value = response;
+  } catch (error) {
+    toast.error(error);
+  }
+};
 
-
-      // get list of clients
+const handleSubmitForm = async () => {
+  if (searchBy.value === 'Client Name') {
+    if (firstName.value || lastName.value) {
       try {
-        const response = await getClients();
-        this.clients = response;
+        const query = {
+          searchBy: 'name',
+          firstName: firstName.value,
+          lastName: lastName.value,
+        };
+        const response = await searchClients(query);
+        clients.value = response;
       } catch (error) {
-        toast.error(error)
+        toast.error(error);
       }
-    },
-    // method called when user searches for clients
-    async handleSubmitForm() {
-      // if user searched by client name
-      if (this.searchBy === 'Client Name') {
-        if (this.firstName || this.lastName) {
-          try {
-            const query = {
-              searchBy: 'name',
-              firstName: this.firstName,
-              lastName: this.lastName,
-            }
-            const response = await searchClients(query)
-            this.clients = response;
-          } catch (error) {
-            toast.error(error)
-          }
-        }
-        // if user searches by client phone number
-      } else if (this.searchBy === 'Client Number') {
-        if (this.phoneNumber) {
-          try {
-            const query = {
-              searchBy: 'number',
-              phoneNumber: this.phoneNumber
-            }
-            const response = await searchClients(query)
-            this.clients = response;
-          } catch (error) {
-            toast.error(error)
-          }
-        }
+    }
+  } else if (searchBy.value === 'Client Number') {
+    if (phoneNumber.value) {
+      try {
+        const query = {
+          searchBy: 'number',
+          phoneNumber: phoneNumber.value,
+        };
+        const response = await searchClients(query);
+        clients.value = response;
+      } catch (error) {
+        toast.error(error);
       }
-    },
-  },
-}
+    }
+  }
+};
+
+onMounted(loadData);
 </script>

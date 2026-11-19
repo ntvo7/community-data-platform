@@ -1,4 +1,3 @@
-<!-- This view displays a list of events. Users can search for events, and click on an event to be redirected to another component to view that event's details -->
 <template>
   <main>
     <div>
@@ -24,14 +23,14 @@
           <label class="block">
             <input type="text"
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              v-model="name" v-on:keyup.enter="handleSubmitForm" placeholder="Enter event name" />
+              v-model="name" @keyup.enter="handleSubmitForm" placeholder="Enter event name" />
           </label>
         </div>
         <!-- Displays event date search field -->
         <div class="flex flex-col" v-if="searchBy === 'Event Date'">
           <input
             class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            type="date" v-model="eventDate" v-on:keyup.enter="handleSubmitForm" />
+            type="date" v-model="eventDate" @keyup.enter="handleSubmitForm" />
         </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
@@ -49,7 +48,7 @@
         </div>
       </div>
     </div>
-
+ 
     <hr class="mt-10 mb-10" />
     <!-- Display Found Data -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
@@ -82,74 +81,62 @@
     </div>
   </main>
 </template>
-
-<script>
+ 
+<script setup>
+import { ref, onMounted } from 'vue'
 import { getEvents, searchEvents } from '../api/api'
 import { useToast } from 'vue-toastification'
 
-
-//Notifications
+// Notifications
 const toast = useToast()
 
+// State
+const events = ref([])
+const searchBy = ref(null)
+const name = ref(null)
+const eventDate = ref(null)
+const hoverId = ref(null)
 
-export default {
-  data() {
-    return {
-      //variable to store all events and their information for the organization
-      events: [],
-      // Parameters for search to occur
-      searchBy: '',
-      name: '',
-      eventDate: '',
-      // variable stores the ID of the row that the mouse is currently hovering over (to highlight the row red)
-      hoverId: null,
-    }
-  },
-  mounted() {
-    // when component is mounted, load the data -
-    this.loadData()
-  },
-  methods: {
-    // method to format the event date
-    formatDate(date) {
-      const isoDate = new Date(date);
-      const year = isoDate.getUTCFullYear();
-      const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(isoDate.getUTCDate()).padStart(2, '0');
-      return `${month}/${day}/${year}`;
-    },
-    // method called when component is mounted
-    async loadData() {
-      // Resets all the variables
-      this.searchBy = ''
-      this.name = ''
-      this.eventDate = ''
+// Methods
+const loadData = async () => {
+  searchBy.value = null
+  name.value = null
+  eventDate.value = null
 
-      // get list of events
-      try {
-        this.events = await getEvents();
-      } catch (error) {
-        toast.error(error)
-      }
-    },
-    // method called when user searches for events
-    async handleSubmitForm() {
-      let query = null
-      // if user searched by event name
-      if (this.searchBy === 'Event Name' && this.name) {
-        query = { searchBy: 'name', name: this.name }
-        // if user searched by event date
-      } else if (this.searchBy === 'Event Date' && this.eventDate) {
-        query = { searchBy: 'date', eventDate: this.eventDate }
-      }
-      if (!query) return
-
-      try {
-        this.events = await searchEvents(query)
-      } catch (error) {
-        toast.error(error)
-      }
-    },
-  },
+  try {
+    const response = await getEvents()
+    events.value = response
+  } catch (error) {
+    toast.error(error)
+  }
 }
+
+const handleSubmitForm = async () => {
+  let query = null
+
+  if (searchBy.value === 'Event Name' && name.value) {
+    query = { searchBy: 'name', name: name.value }
+  } else if (searchBy.value === 'Event Date' && eventDate.value) {
+    // the date input already gives YYYY-MM-DD
+    query = { searchBy: 'date', eventDate: eventDate.value }
+  }
+  // nothing to search for
+  if (!query) return
+
+  try {
+    events.value = await searchEvents(query)
+  } catch (error) {
+    toast.error(error)
+  }
+}
+
+const formatDate = (date) => {
+  const isoDate = new Date(date)
+  const year = isoDate.getUTCFullYear()
+  const month = String(isoDate.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(isoDate.getUTCDate()).padStart(2, '0')
+  return `${month}/${day}/${year}`
+}
+
+onMounted(loadData)
 </script>

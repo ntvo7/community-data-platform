@@ -31,25 +31,6 @@
     </div>
 </template>
 
-<!-- <script>
-import { useLoggedInUserStore } from "../store/loggedInUser";
-import { ref } from 'vue';
-
-export default {
-  setup() {
-    const username = ref('');
-    const password = ref('');
-    const store = useLoggedInUserStore();
-
-    return {
-      username,
-      password,
-      store
-    };
-  }
-}
-</script> -->
-
 <script setup>
 import { useLoggedInUserStore } from "../store/loggedInUser";
 import { ref } from 'vue';

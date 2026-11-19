@@ -14,7 +14,7 @@
         <!-- grid container -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <h2 class="text-2xl font-bold">Event Details</h2>
-
+ 
           <!-- Event Name Input Field -->
           <div class="flex flex-col">
             <label class="block">
@@ -29,7 +29,7 @@
               Event Name is required
             </span>
           </div>
-
+ 
           <!-- Date input field -->
           <div class="flex flex-col">
             <label class="block">
@@ -53,7 +53,7 @@
               </span>
             </span>
           </div>
-
+ 
           <div></div>
           <div></div>
           <!-- Description input field -->
@@ -66,7 +66,7 @@
             </label>
           </div>
         </div>
-
+ 
         <!-- Services Offered at Event checkboxes -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 mt-10">
           <h2 class="text-2xl font-bold">Services Offered at Event</h2>
@@ -82,13 +82,13 @@
                     <span class="font-medium">{{ service.name }}</span>
                   </label>
                 </li>
-              </ul> 
+              </ul>
               <!--If there are no active services for the user's organization, this will appear instead of list of checkboxes-->
               <p v-else class="text-gray-600">No Active Services Available</p>
             </div>
           </div>
         </div>
-
+ 
         <!-- grid container -->
         <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <h2 class="text-2xl font-bold">Address</h2>
@@ -139,7 +139,7 @@
             </label>
           </div>
         </div>
-
+ 
         <!--Add New Event submit button-->
         <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
           <div></div>
@@ -153,110 +153,79 @@
     </div>
   </main>
 </template>
-
-<script>
-// import vuelidate validations
+ 
+<script setup>
+import { reactive, onMounted } from 'vue'
 import useVuelidate from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
 import { getServices, createEvent } from '../api/api'
 import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 
-
-//Notifications
 const toast = useToast()
+const router = useRouter()
 
+const event = reactive({
+  name: null,
+  description: null,
+  date: null,
+  services: [],
+  address: {
+    line1: null,
+    line2: null,
+    city: null,
+    county: null,
+    zip: null
+  },
+  attendees: []
+})
 
-export default {
-  data() {
-    return {
-      // event variable to hold new event information
-      event: {
-        name: null,
-        description: null,
-        date: null,
-        services: [],
-        address: {
-          line1: null,
-          line2: null,
-          city: null,
-          county: null,
-          zip: null
-        },
-        attendees: [],
-      },
-      //variable to assign service IDs to event (user clicks checkboxes to add services to event)
-      activeServices: [],
-      // variable that determines which services in the List of Services checkboxes have expanded details
-      openDescriptions: [],
+const activeServices = reactive([])
+
+// prevents creating an event dated before today. Compare with today's date where the user is:
+// toISOString alone gives the UTC date, which is already tomorrow during the evening in US time zones
+const notBeforeToday = (value) => {
+  const now = new Date()
+  const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+  return value >= today.toISOString().split('T')[0]
+}
+
+const validations = {
+  event: {
+    name: { required },
+    date: {
+      required,
+      validDate: value => !isNaN(new Date(value)),
+      notBeforeToday
     }
-  },
-  setup() {
-    // Register Vuelidate
-    const v$ = useVuelidate();
-    return { v$ };
-  },
-  validations() {
-    // validations
-    const validDate = (value) => {
-      const date = new Date(value)
-      return !isNaN(date)
-    }
+  }
+}
 
+const v$ = useVuelidate(validations, { event })
 
-    // prevents form submission if new event has a date before the current date
-    const notBeforeToday = (value) => {
-      // compare with today's date where the user is. toISOString alone gives the UTC date,
-      // which is already tomorrow during the evening in US time zones
-      const now = new Date()
-      const today = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-      return value >= today.toISOString().split('T')[0]
-    }
+onMounted(async () => {
+  try {
+    const response = await getServices()
+    activeServices.splice(0, activeServices.length, ...response.filter(item => item.status === 'Active'))
+  } catch (error) {
+    toast.error(error)
+  }
+})
 
+const handleSubmitForm = async () => {
+  v$.value.$validate()
 
-    return {
-      event: {
-        name: { required },
-        date: {
-          required,
-          validDate,
-          notBeforeToday
-        },
-      }
-    }
-  },
-  async mounted() {
-    // when component is mounted, data is loaded
-    try {
-        const response = await getServices();
-        this.activeServices = response.filter(item => item.status === "Active")
-      } catch (error) {
-        toast.error(error)
-      }
-  },
-  methods: {
-    // method called when user tries to create new event
-    async handleSubmitForm() {
-      // Trigger validation
-      this.v$.$validate();
+  if (v$.value.$error) {
+    toast.error('Please fix input field errors')
+    return
+  }
 
-
-      if (this.v$.$error) {
-        toast.error('Please fix input field errors')
-        // Form is invalid, do not proceed
-        return;
-      }
-
-
-      try {
-        const response = await createEvent(this.event);
-        this.$router.push('/findevents')
-        toast.success(response)
-      } catch (error) {
-        toast.error(error)
-      }
-    },
-  },
+  try {
+    const response = await createEvent(event)
+    toast.success(response)
+    router.push('/findevents')
+  } catch (error) {
+    toast.error(error)
+  }
 }
 </script>
-
-
