@@ -12,10 +12,16 @@ export const useLoggedInUserStore = defineStore({
   id: 'loggedInUser',
   state: () => {
     return {
+      id: "",
       name: "",
       role: "",
       isLoggedIn: false
     }
+  },
+  getters: {
+    // admins can do everything editors can
+    canEdit: (state) => state.role === 'editor' || state.role === 'admin',
+    isAdmin: (state) => state.role === 'admin',
   },
   actions: {
     // Keep the user logged in across page reloads, as long as the saved token has not expired
@@ -30,6 +36,7 @@ export const useLoggedInUserStore = defineStore({
         }
         this.$patch({
           isLoggedIn: true,
+          id: decodedToken.id,
           role: decodedToken.role,
           name: decodedToken.name
         });
@@ -44,6 +51,7 @@ export const useLoggedInUserStore = defineStore({
         const decodedToken = jwt_decode(token);
         this.$patch({
           isLoggedIn: true,
+          id: decodedToken.id,
           role: decodedToken.role,
           name: decodedToken.name
         });
@@ -61,6 +69,7 @@ export const useLoggedInUserStore = defineStore({
       logoutUser();
       // Reset value after user log out
       this.$patch({
+        id: "",
         name: "",
         role: "",
         isLoggedIn: false

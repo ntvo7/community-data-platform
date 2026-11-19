@@ -68,6 +68,12 @@ const routes = [
     component: () => import('../views/servicedetails.vue')
   },
   {
+    path: '/usermanagement',
+    name: 'usermanagement',
+    meta: { requiresAuth: true, requiresAdmin: true },
+    component: () => import('../views/usermanagement.vue')
+  },
+  {
     // send unknown URLs to the dashboard instead of showing an empty page
     path: '/:pathMatch(.*)*',
     redirect: '/'
@@ -89,7 +95,11 @@ router.beforeEach((to) => {
     }
   }
   // viewers cannot open the pages that create records
-  if (to.meta.requiresEditor && store.role !== 'editor') {
+  if (to.meta.requiresEditor && !store.canEdit) {
+    return { path: '/' }
+  }
+  // only admins can manage user accounts
+  if (to.meta.requiresAdmin && !store.isAdmin) {
     return { path: '/' }
   }
 })

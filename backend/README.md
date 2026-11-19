@@ -34,6 +34,17 @@ An example document inside the 'users' collection in the DB could look like:
 }
 ```
 
+### User roles
+Each user has one of three roles:
+
+- `admin` (Main Admin): everything an editor can do, plus the User Management page, where they add users, change roles, reset passwords and delete accounts.
+- `editor` (Authorized User): creates and edits clients, events and services.
+- `viewer`: can look at records but not change them.
+
+To make your own account the first admin, run this once, then log out and back in:
+
+    node make-admin.js <your username>
+
 Setup a .env file with the following variables: MONGO_URL, PORT, ORG_ID and JWT_SECRET
 
     MONGO_URL= that is the Mongo URL connection string

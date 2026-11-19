@@ -405,3 +405,44 @@ export const deleteService = async (id) => {
     throw getErrorMessage(error);
   }
 };
+
+// User management API calls (admin only)
+// API call to GET all users
+export const getUsers = async () => {
+  try {
+    const response = await apiClient.get("/users");
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error);
+  }
+};
+
+// API call to POST a new user
+export const createUser = async (user) => {
+  try {
+    const response = await apiClient.post("/users", user);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error);
+  }
+};
+
+// API call to change a user's role and/or password
+export const updateUser = async (id, changes) => {
+  try {
+    const response = await apiClient.put(`/users/${id}`, changes);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error);
+  }
+};
+
+// API call to DELETE a user
+export const deleteUser = async (id) => {
+  try {
+    const response = await apiClient.delete(`/users/${id}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error);
+  }
+};

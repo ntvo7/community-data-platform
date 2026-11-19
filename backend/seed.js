@@ -27,7 +27,8 @@ const id = (suffix) => `64e0380b3cc28d08765500${suffix}`;
 
 const testUsers = [
   { _id: id('01'), username: 'test_editor', password: 'editor-local-only', role: 'editor', org },
-  { _id: id('02'), username: 'test_viewer', password: 'viewer-local-only', role: 'viewer', org }
+  { _id: id('02'), username: 'test_viewer', password: 'viewer-local-only', role: 'viewer', org },
+  { _id: id('03'), username: 'test_admin', password: 'admin-local-only', role: 'admin', org }
 ];
 
 const testServices = [
