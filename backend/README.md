@@ -41,9 +41,15 @@ Each user has one of three roles:
 - `editor` (Authorized User): creates and edits clients, events and services.
 - `viewer`: can look at records but not change them.
 
-To make your own account the first admin, run this once, then log out and back in:
+To set up the first admin, run this once from the backend folder:
 
     node make-admin.js <your username>
+
+If the account exists, it becomes an admin (log out and back in to see User Management). If it does not, the script asks for a password and creates it as an admin. The password is hidden while you type.
+
+The script changes the database in `MONGO_URL` from `.env`. To set up the admin on the live site instead, give it your MongoDB Atlas connection string (Render: API service > Environment > `MONGO_URL`):
+
+    MONGO_URL="<Atlas connection string>" node make-admin.js <your username>
 
 Setup a .env file with the following variables: MONGO_URL, PORT, ORG_ID and JWT_SECRET
 
