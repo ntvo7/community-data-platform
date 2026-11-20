@@ -81,15 +81,18 @@
         </nav>
       </header>
     </div>
-    <div class="grow w-4/5">
+    <!-- a column at least as tall as the screen, so the footer sits at the bottom even on short pages -->
+    <div class="grow w-4/5 flex flex-col min-h-screen">
       <!-- Organization Name Header -->
       <section class="justify-end items-center h-24 flex" style="background: linear-gradient(250deg, #c8102e 70%, #efecec 50.6%)">
         <h1 class="mr-20 text-3xl text-white"> {{ orgName }}</h1>
       </section>
       <!-- Page Content -->
-      <div>
+      <div class="grow">
         <router-view></router-view>
       </div>
+      <!-- Footer -->
+      <AppFooter :org-name="orgName" />
     </div>
   </main>
 </template>
@@ -100,6 +103,7 @@ import { useLoggedInUserStore } from './store/loggedInUser';
 import { getOrgName } from './api/api';
 import { useToast } from 'vue-toastification';
 import { useRouter } from 'vue-router';
+import AppFooter from './components/appFooter.vue';
 
 const user = useLoggedInUserStore();
 const orgName = ref("Dataplatform");

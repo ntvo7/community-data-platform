@@ -133,19 +133,13 @@ import { required, minLength } from '@vuelidate/validators'
 import { useToast } from 'vue-toastification'
 import { useLoggedInUserStore } from '../store/loggedInUser'
 import { getUsers, createUser, updateUser, deleteUser } from '../api/api'
+import { roles, roleLabel } from '../roles'
 
 const toast = useToast()
 const loggedInUser = useLoggedInUserStore()
 
 // same minimum as the backend
 const MIN_PASSWORD_LENGTH = 8
-
-// the roles, from most to least access
-const roles = [
-  { value: 'admin', label: 'Main Admin', description: 'everything, including managing users' },
-  { value: 'editor', label: 'Authorized User', description: 'creates and edits clients, events and services' },
-  { value: 'viewer', label: 'Viewer', description: 'can look at records but not change them' },
-]
 
 // all user accounts of the organization
 const users = ref([])
@@ -163,7 +157,6 @@ const rules = {
 const v$ = useVuelidate(rules, { newUser })
 
 const isMe = (account) => account._id === loggedInUser.id
-const roleLabel = (value) => roles.find((role) => role.value === value)?.label
 
 const loadUsers = async () => {
   try {
